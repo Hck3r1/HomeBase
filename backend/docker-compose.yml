@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: homebase
+      POSTGRES_PASSWORD: homebase
+      POSTGRES_DB: homebase
+    ports:
+      - '5432:5432'
+    volumes:
+      - homebase_pg:/var/lib/postgresql/data
+volumes:
+  homebase_pg:
