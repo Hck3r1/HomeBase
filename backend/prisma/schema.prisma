@@ -1,0 +1,17 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+// Minimal model so the first migration is non-empty.
+// Real domain models are added in later phases.
+model HealthCheck {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+}
