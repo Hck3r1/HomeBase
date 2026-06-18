@@ -1,0 +1,247 @@
+<style>
+  :root{
+    --teal:#3B7A6F; --teal-d:#2F6359; --ink:#15201D; --muted:#8A938F;
+    --line:#E6EAE8; --card:#F3F5F4; --chip:#EAF1EF;
+  }
+  .hb-intro{max-width:880px;margin:0 auto 26px;}
+  .hb-intro h2{margin:0 0 6px;}
+  .phones{display:flex;flex-wrap:wrap;gap:34px;justify-content:center;align-items:flex-start;}
+  .ph{width:300px;background:#fff;border:1px solid var(--line);border-radius:38px;
+      box-shadow:0 18px 50px rgba(20,32,29,.14);overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+  .ph-screen{height:620px;display:flex;flex-direction:column;position:relative;background:#fff;}
+  .ph-label{text-align:center;font-size:13px;color:var(--muted);margin-top:12px;font-weight:600;}
+  .sb{display:flex;justify-content:space-between;align-items:center;padding:14px 22px 4px;font-size:13px;font-weight:600;color:var(--ink);}
+  .sb .dots{letter-spacing:1px;}
+  .pad{padding:8px 22px 0;}
+  .back{font-size:20px;color:var(--ink);margin:6px 0 8px;display:inline-block;}
+  h1.t{font-size:25px;font-weight:700;color:var(--ink);margin:6px 0 4px;letter-spacing:-.3px;}
+  .sub{font-size:13px;color:var(--muted);margin:0 0 16px;}
+  .sub a{color:var(--teal);font-weight:700;text-decoration:underline;}
+  .group{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:14px;}
+  .field{padding:14px 16px;font-size:14px;color:var(--ink);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+  .field:last-child{border-bottom:none;}
+  .field .ph-t{color:#9aa3a0;}
+  .field .show{color:var(--ink);text-decoration:underline;font-size:12px;}
+  .terms{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--muted);margin-bottom:16px;}
+  .cbx{width:18px;height:18px;border-radius:5px;background:var(--teal);flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;}
+  .btn{background:var(--teal);color:#fff;text-align:center;padding:15px;border-radius:30px;font-weight:700;font-size:15px;}
+  .btn.lg{margin-bottom:14px;}
+  .or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin:6px 0 14px;}
+  .or::before,.or::after{content:"";height:1px;background:var(--line);flex:1;}
+  .social{display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid var(--line);border-radius:30px;padding:13px;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:11px;}
+  .social .ic{width:18px;height:18px;border-radius:50%;display:inline-block;font-size:11px;font-weight:800;color:#fff;text-align:center;line-height:18px;}
+
+  /* splash */
+  .splash{background:var(--teal);height:620px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;}
+  .splash .mark{width:78px;height:78px;}
+  .splash .name{font-size:24px;font-weight:700;letter-spacing:.5px;margin-top:16px;}
+  .splash .tag{font-size:12px;opacity:.8;margin-top:4px;}
+
+  /* home */
+  .scroll{overflow:hidden;flex:1;}
+  .hi{display:flex;justify-content:space-between;align-items:center;padding:4px 22px 10px;}
+  .hi .hello{font-size:12px;color:var(--muted);}
+  .hi .nm{font-size:18px;font-weight:700;color:var(--ink);}
+  .av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#3B7A6F,#5fa697);}
+  .search{margin:0 22px;display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;padding:13px 15px;color:#9aa3a0;font-size:13px;}
+  .search .fil{margin-left:auto;width:30px;height:30px;border-radius:9px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;}
+  .seg{display:flex;gap:8px;padding:16px 22px 4px;}
+  .seg .s{padding:8px 16px;border-radius:30px;font-size:13px;font-weight:600;color:var(--muted);background:var(--card);}
+  .seg .s.on{background:var(--teal);color:#fff;}
+  .sech{display:flex;justify-content:space-between;align-items:center;padding:14px 22px 8px;}
+  .sech .h{font-size:16px;font-weight:700;color:var(--ink);}
+  .sech .a{font-size:12px;color:var(--teal);font-weight:600;}
+  .clist{padding:0 22px;display:flex;flex-direction:column;gap:14px;}
+  .lc{border-radius:16px;overflow:hidden;border:1px solid var(--line);}
+  .lc .img{height:120px;background-size:cover;background-position:center;position:relative;}
+  .lc .heart{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;color:var(--teal);}
+  .lc .tag2{position:absolute;top:10px;left:10px;background:rgba(21,32,29,.7);color:#fff;font-size:10px;font-weight:600;padding:4px 9px;border-radius:20px;}
+  .lc .b{padding:11px 13px;}
+  .lc .pr{font-size:15px;font-weight:700;color:var(--ink);}
+  .lc .pr span{font-size:11px;color:var(--muted);font-weight:500;}
+  .lc .ti{font-size:13px;color:var(--ink);margin:3px 0 2px;font-weight:600;}
+  .lc .lo{font-size:11px;color:var(--muted);}
+  .lc .meta{display:flex;gap:14px;margin-top:8px;font-size:11px;color:var(--muted);}
+  .tabs{display:flex;justify-content:space-around;align-items:center;border-top:1px solid var(--line);padding:11px 0 14px;background:#fff;}
+  .tab{font-size:10px;color:var(--muted);text-align:center;display:flex;flex-direction:column;gap:3px;align-items:center;}
+  .tab .d{width:22px;height:22px;}
+  .tab.on{color:var(--teal);}
+
+  /* detail */
+  .hero{height:250px;background-size:cover;background-position:center;position:relative;}
+  .hero .top{position:absolute;top:46px;left:18px;right:18px;display:flex;justify-content:space-between;}
+  .hero .circ{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;color:var(--ink);}
+  .sheet{margin-top:-24px;background:#fff;border-radius:24px 24px 0 0;padding:20px 22px;flex:1;position:relative;}
+  .dt-row{display:flex;justify-content:space-between;align-items:flex-start;}
+  .dt-row .ti{font-size:19px;font-weight:700;color:var(--ink);}
+  .dt-row .lo{font-size:12px;color:var(--muted);margin-top:3px;}
+  .dt-row .pr{font-size:17px;font-weight:800;color:var(--teal);text-align:right;}
+  .dt-row .pr span{display:block;font-size:10px;color:var(--muted);font-weight:500;}
+  .feat{display:flex;gap:10px;margin:16px 0;}
+  .feat .f{flex:1;background:var(--card);border-radius:12px;padding:10px;text-align:center;font-size:11px;color:var(--ink);font-weight:600;}
+  .feat .f span{display:block;font-size:10px;color:var(--muted);font-weight:500;margin-top:2px;}
+  .desc{font-size:12px;color:#5c6562;line-height:1.6;margin-bottom:16px;}
+  .lister{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;padding:12px;margin-bottom:14px;}
+  .lister .nm{font-size:13px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;}
+  .badge{background:var(--chip);color:var(--teal);font-size:9px;font-weight:700;padding:3px 7px;border-radius:20px;}
+  .lister .ro{font-size:11px;color:var(--muted);}
+  .lister .msg{margin-left:auto;width:38px;height:38px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;}
+  .botbar{display:flex;align-items:center;gap:12px;border-top:1px solid var(--line);padding:14px 20px;}
+  .botbar .p{font-size:16px;font-weight:800;color:var(--ink);}
+  .botbar .p span{font-size:10px;color:var(--muted);font-weight:500;display:block;}
+  .botbar .btn{flex:1;padding:14px;}
+
+  /* booking */
+  .cal{padding:0 22px;}
+  .cal .mh{text-align:center;font-size:14px;font-weight:700;color:var(--ink);margin:6px 0 12px;}
+  .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:10px;color:var(--muted);text-align:center;margin-bottom:6px;}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .dy{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ink);border-radius:9px;}
+  .dy.mut{color:#cdd4d1;}
+  .dy.sel{background:var(--teal);color:#fff;font-weight:700;}
+  .dy.rng{background:var(--chip);color:var(--teal);}
+  .gst{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:16px 0;}
+  .gst .lbl{font-size:13px;font-weight:600;color:var(--ink);}
+  .stp{display:flex;align-items:center;gap:14px;}
+  .stp .b{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--teal);font-weight:700;}
+  .brk{padding:0 22px;}
+  .brk .r{display:flex;justify-content:space-between;font-size:13px;color:#5c6562;margin-bottom:9px;}
+  .brk .r.tot{font-weight:800;color:var(--ink);font-size:15px;border-top:1px solid var(--line);padding-top:11px;margin-top:3px;}
+</style>
+
+<div class="hb-intro">
+  <h2>HomeBase — core screens (v1)</h2>
+  <p class="subtitle">Your teal design language applied. Real photos + Lagos listings + NGN pricing. Tell me what to tune (color, spacing, layout) and which screen to refine next.</p>
+</div>
+
+<div class="phones">
+
+  <!-- SPLASH -->
+  <div>
+    <div class="ph"><div class="ph-screen splash">
+      <svg class="mark" viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 28 L32 10 L54 28"/><path d="M16 26 V52 H48 V26"/><path d="M27 52 V38 H37 V52"/>
+        <circle cx="32" cy="24" r="3"/>
+      </svg>
+      <div class="name">HomeBase</div>
+      <div class="tag">Rent · Buy · Stay</div>
+    </div></div>
+    <div class="ph-label">1 · Splash</div>
+  </div>
+
+  <!-- SIGN UP -->
+  <div>
+    <div class="ph"><div class="ph-screen">
+      <div class="sb"><span>9:41</span><span class="dots">📶 🔋</span></div>
+      <div class="pad" style="overflow:hidden;flex:1;">
+        <span class="back">←</span>
+        <h1 class="t">Create an account</h1>
+        <p class="sub">Already have an account? <a>Log in</a></p>
+        <div class="group">
+          <div class="field"><span class="ph-t">Full name</span></div>
+          <div class="field"><span class="ph-t">Email</span></div>
+          <div class="field"><span>•••••••••••</span><span class="show">Show</span></div>
+        </div>
+        <div class="terms"><span class="cbx">✓</span><span>I agree to HomeBase's <b style="color:#5c6562">Terms</b> and <b style="color:#5c6562">Privacy Notice</b></span></div>
+        <div class="btn lg">Sign up</div>
+        <div class="or">Or</div>
+        <div class="social"><span class="ic" style="background:#fff;color:#4285F4;border:1px solid var(--line)">G</span>Continue with Google</div>
+        <div class="social"><span class="ic" style="background:#1877F2">f</span>Continue with Facebook</div>
+        <div class="social"><span class="ic" style="background:#000">x</span>Continue with X</div>
+      </div>
+    </div></div>
+    <div class="ph-label">2 · Sign up</div>
+  </div>
+
+  <!-- HOME / SEARCH -->
+  <div>
+    <div class="ph"><div class="ph-screen">
+      <div class="sb"><span>9:41</span><span class="dots">📶 🔋</span></div>
+      <div class="hi"><div><div class="hello">Good evening,</div><div class="nm">Moyosore 👋</div></div><div class="av"></div></div>
+      <div class="search">🔍 Search Lekki, Ikeja, Yaba…<span class="fil">⚙</span></div>
+      <div class="seg"><div class="s on">Rent</div><div class="s">Buy</div><div class="s">Short-stay</div></div>
+      <div class="sech"><span class="h">Nearby</span><span class="a">See all</span></div>
+      <div class="scroll">
+        <div class="clist">
+          <div class="lc">
+            <div class="img" style="background-image:url('https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&q=80')">
+              <span class="tag2">FOR RENT</span><span class="heart">♡</span></div>
+            <div class="b"><div class="pr">₦2,500,000<span> / year</span></div>
+              <div class="ti">3-Bed Apartment</div><div class="lo">Lekki Phase 1, Lagos</div>
+              <div class="meta"><span>🛏 3 beds</span><span>🛁 3 baths</span><span>📐 120m²</span></div></div>
+          </div>
+          <div class="lc">
+            <div class="img" style="background-image:url('https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600&q=80')">
+              <span class="tag2">FOR RENT</span><span class="heart">♡</span></div>
+            <div class="b"><div class="pr">₦1,800,000<span> / year</span></div>
+              <div class="ti">2-Bed Flat</div><div class="lo">Yaba, Lagos</div>
+              <div class="meta"><span>🛏 2 beds</span><span>🛁 2 baths</span><span>📐 95m²</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="tabs">
+        <div class="tab on"><svg class="d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</div>
+        <div class="tab"><svg class="d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Explore</div>
+        <div class="tab"><svg class="d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.6-9.5-9C1 9 2.5 5 6 5c2 0 3 1.2 4 2.5C11 6.2 12 5 14 5c3.5 0 5 4 3.5 7C19 16.4 12 21 12 21z"/></svg>Saved</div>
+        <div class="tab"><svg class="d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 01-4 4H8l-5 4V7a4 4 0 014-4h10a4 4 0 014 4z"/></svg>Chat</div>
+        <div class="tab"><svg class="d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Profile</div>
+      </div>
+    </div></div>
+    <div class="ph-label">3 · Home / Search</div>
+  </div>
+
+  <!-- LISTING DETAIL -->
+  <div>
+    <div class="ph"><div class="ph-screen">
+      <div class="hero" style="background-image:url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=700&q=80')">
+        <div class="top"><span class="circ">←</span><span class="circ">♡</span></div>
+      </div>
+      <div class="sheet">
+        <div class="dt-row">
+          <div><div class="ti">Luxury 4-Bed Duplex</div><div class="lo">📍 Banana Island, Ikoyi</div></div>
+          <div class="pr">₦85,000,000<span>For sale</span></div>
+        </div>
+        <div class="feat">
+          <div class="f">4<span>Beds</span></div><div class="f">5<span>Baths</span></div><div class="f">320m²<span>Area</span></div>
+        </div>
+        <div class="desc">Stunning waterfront duplex with private parking, 24/7 power, swimming pool and smart-home features in a gated estate…</div>
+        <div class="lister">
+          <div class="av" style="width:42px;height:42px"></div>
+          <div><div class="nm">Adaeze Realty <span class="badge">✓ Verified Agent</span></div><div class="ro">Usually replies in 1h</div></div>
+          <div class="msg">💬</div>
+        </div>
+      </div>
+      <div class="botbar"><div class="p">₦85M<span>Negotiable</span></div><div class="btn">Schedule inspection</div></div>
+    </div></div>
+    <div class="ph-label">4 · Listing detail</div>
+  </div>
+
+  <!-- BOOKING -->
+  <div>
+    <div class="ph"><div class="ph-screen">
+      <div class="sb"><span>9:41</span><span class="dots">📶 🔋</span></div>
+      <div class="pad"><span class="back">←</span><h1 class="t" style="font-size:20px">Select dates</h1>
+        <p class="sub" style="margin-bottom:12px">Shortlet · Victoria Island</p></div>
+      <div class="cal">
+        <div class="mh">August 2026</div>
+        <div class="dow"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+        <div class="grid">
+          <div class="dy mut">27</div><div class="dy mut">28</div><div class="dy mut">29</div><div class="dy mut">30</div><div class="dy mut">31</div><div class="dy">1</div><div class="dy">2</div>
+          <div class="dy">3</div><div class="dy">4</div><div class="dy">5</div><div class="dy">6</div><div class="dy">7</div><div class="dy">8</div><div class="dy">9</div>
+          <div class="dy">10</div><div class="dy sel">11</div><div class="dy rng">12</div><div class="dy rng">13</div><div class="dy sel">14</div><div class="dy">15</div><div class="dy">16</div>
+          <div class="dy">17</div><div class="dy">18</div><div class="dy">19</div><div class="dy">20</div><div class="dy">21</div><div class="dy">22</div><div class="dy">23</div>
+        </div>
+      </div>
+      <div class="gst"><span class="lbl">Guests</span><div class="stp"><span class="b">−</span><span>2</span><span class="b">+</span></div></div>
+      <div class="brk">
+        <div class="r"><span>₦45,000 × 3 nights</span><span>₦135,000</span></div>
+        <div class="r"><span>Cleaning fee</span><span>₦10,000</span></div>
+        <div class="r"><span>Service fee</span><span>₦7,250</span></div>
+        <div class="r tot"><span>Total</span><span>₦152,250</span></div>
+      </div>
+      <div style="padding:14px 22px 0"><div class="btn">Reserve &amp; Pay</div></div>
+    </div></div>
+    <div class="ph-label">5 · Short-stay booking</div>
+  </div>
+
+</div>
