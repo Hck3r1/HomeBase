@@ -1,0 +1,739 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "HomeBase API",
+    "description": "Authentication and user profile endpoints for the HomeBase mobile app.",
+    "version": "1.0.0"
+  },
+  "servers": [{ "url": "http://localhost:4000", "description": "Local development" }],
+  "tags": [
+    { "name": "Auth", "description": "Registration, login, tokens, and password reset" },
+    { "name": "Users", "description": "Authenticated user profile and settings" },
+    { "name": "Catalog", "description": "Reference data for onboarding and filters" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Access token from login, register, refresh, or social auth"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "required": ["id", "name", "email", "role", "listerType"],
+        "properties": {
+          "id": { "type": "string", "example": "clx1a2b3c4d5e6f7g8h9i0j1" },
+          "name": { "type": "string", "example": "Moyo Ade" },
+          "email": { "type": "string", "format": "email", "example": "moyo@example.com" },
+          "role": { "type": "string", "enum": ["seeker", "lister"], "example": "seeker" },
+          "listerType": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["agent", "landlord", null],
+            "example": null
+          }
+        }
+      },
+      "UserProfile": {
+        "allOf": [
+          { "$ref": "#/components/schemas/User" },
+          {
+            "type": "object",
+            "properties": {
+              "phone": { "type": "string", "nullable": true, "example": "+2348012345678" },
+              "avatarUrl": {
+                "type": "string",
+                "nullable": true,
+                "example": "https://cdn.example.com/avatars/moyo.jpg"
+              },
+              "dateOfBirth": { "type": "string", "nullable": true, "format": "date", "example": "2000-09-22" },
+              "gender": { "type": "string", "nullable": true, "enum": ["male", "female", "prefer_not_to_say"] },
+              "setupStep": {
+                "type": "string",
+                "enum": ["profile", "role", "preferences", "kyc"],
+                "example": "profile"
+              },
+              "setupCompletedAt": { "type": "string", "nullable": true, "format": "date-time" },
+              "preferences": { "type": "object", "nullable": true }
+            }
+          }
+        ]
+      },
+      "UpdatePreferencesRequest": {
+        "type": "object",
+        "properties": {
+          "listingTypes": { "type": "array", "items": { "type": "string", "enum": ["rent", "sale", "shortstay"] } },
+          "budgetMin": { "type": "integer", "nullable": true },
+          "budgetMax": { "type": "integer", "nullable": true },
+          "preferredCity": { "type": "string", "nullable": true },
+          "bedroomsMin": { "type": "integer", "nullable": true },
+          "serviceAreas": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "SetupCatalog": {
+        "type": "object",
+        "properties": {
+          "cities": { "type": "array", "items": { "type": "object" } },
+          "listingTypes": { "type": "array", "items": { "type": "object" } },
+          "seekerBudgetPresets": { "type": "array", "items": { "type": "object" } },
+          "listerPricePresets": { "type": "array", "items": { "type": "object" } },
+          "genders": { "type": "array", "items": { "type": "object" } },
+          "bedroomOptions": { "type": "array", "items": { "type": "object" } },
+          "defaults": { "type": "object" }
+        }
+      },
+      "AuthSession": {
+        "type": "object",
+        "required": ["user", "accessToken", "refreshToken"],
+        "properties": {
+          "user": { "$ref": "#/components/schemas/User" },
+          "accessToken": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbHgxYTIiLCJyb2xlIjoic2Vla2VyIiwiaWF0IjoxNzEwMDAwMDAwLCJleHAiOjE3MTAwMDM2MDB9.example"
+          },
+          "refreshToken": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbHgxYTIiLCJpYXQiOjE3MTAwMDAwMDAsImV4cCI6MTc0MTUzNjAwMH0.example"
+          }
+        }
+      },
+      "TokenPair": {
+        "type": "object",
+        "required": ["accessToken", "refreshToken"],
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbHgxYTIiLCJyb2xlIjoic2Vla2VyIiwiaWF0IjoxNzEwMDAwMDAwLCJleHAiOjE3MTAwMDM2MDB9.example"
+          },
+          "refreshToken": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbHgxYTIiLCJpYXQiOjE3MTAwMDAwMDAsImV4cCI6MTc0MTUzNjAwMH0.example"
+          }
+        }
+      },
+      "OkResponse": {
+        "type": "object",
+        "required": ["ok"],
+        "properties": {
+          "ok": { "type": "boolean", "example": true }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "required": ["ok", "message"],
+        "properties": {
+          "ok": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Check your email to verify your account before signing in." }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["message", "status"],
+            "properties": {
+              "message": { "type": "string", "example": "Invalid credentials" },
+              "status": { "type": "integer", "example": 401 }
+            }
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["name", "email", "password"],
+        "properties": {
+          "name": { "type": "string", "minLength": 2, "example": "Moyo Ade" },
+          "email": { "type": "string", "format": "email", "example": "moyo@example.com" },
+          "password": { "type": "string", "minLength": 8, "example": "password1" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email", "example": "moyo@example.com" },
+          "password": { "type": "string", "example": "password1" }
+        }
+      },
+      "RefreshRequest": {
+        "type": "object",
+        "required": ["refreshToken"],
+        "properties": {
+          "refreshToken": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example" }
+        }
+      },
+      "ForgotPasswordRequest": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": { "type": "string", "format": "email", "example": "moyo@example.com" }
+        }
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "required": ["token", "password"],
+        "properties": {
+          "token": { "type": "string", "example": "a1b2c3d4e5f6789012345678901234567890abcd" },
+          "password": { "type": "string", "minLength": 8, "example": "newpassword1" }
+        }
+      },
+      "SocialLoginRequest": {
+        "type": "object",
+        "required": ["provider", "token"],
+        "properties": {
+          "provider": { "type": "string", "enum": ["google", "facebook", "x"], "example": "google" },
+          "token": { "type": "string", "example": "ya29.a0AfH6SMBx-provider-id-token" }
+        }
+      },
+      "UpdateProfileRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "example": "Moyo Ade" },
+          "phone": { "type": "string", "nullable": true, "example": "+2348012345678" },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://cdn.example.com/avatars/moyo.jpg"
+          }
+        }
+      },
+      "UpdateRoleRequest": {
+        "type": "object",
+        "required": ["role"],
+        "properties": {
+          "role": { "type": "string", "enum": ["seeker", "lister"], "example": "lister" },
+          "listerType": {
+            "type": "string",
+            "enum": ["agent", "landlord"],
+            "description": "Required when role is lister",
+            "example": "agent"
+          }
+        }
+      },
+      "PushTokenRequest": {
+        "type": "object",
+        "required": ["token", "platform"],
+        "properties": {
+          "token": { "type": "string", "example": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]" },
+          "platform": { "type": "string", "enum": ["ios", "android"], "example": "ios" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Create account",
+        "description": "Register a new user with email and password. Sends a verification email; user must verify before login.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" },
+              "example": {
+                "name": "Moyo Ade",
+                "email": "moyo@example.com",
+                "password": "password1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account created — verification email sent (no session tokens)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" },
+                "example": {
+                  "ok": true,
+                  "message": "Check your email to verify your account before signing in."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": { "error": { "message": "Invalid email", "status": 400 } }
+              }
+            }
+          },
+          "409": {
+            "description": "Email already registered",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": { "error": { "message": "Email already registered", "status": 409 } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Log in",
+        "description": "Authenticate with email and password.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" },
+              "example": { "email": "moyo@example.com", "password": "password1" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthSession" },
+                "example": {
+                  "user": {
+                    "id": "clx1a2b3c4d5e6f7g8h9i0j1",
+                    "name": "Moyo Ade",
+                    "email": "moyo@example.com",
+                    "role": "seeker",
+                    "listerType": null
+                  },
+                  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbHgxYTIiLCJyb2xlIjoic2Vla2VyIiwiaWF0IjoxNzEwMDAwMDAwLCJleHAiOjE3MTAwMDM2MDB9.example",
+                  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbHgxYTIiLCJpYXQiOjE3MTAwMDAwMDAsImV4cCI6MTc0MTUzNjAwMH0.example"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": { "error": { "message": "Invalid credentials", "status": 401 } }
+              }
+            }
+          },
+          "403": {
+            "description": "Email not verified",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": { "error": { "message": "Please verify your email to continue", "status": 403 } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verify-email": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Verify email (API)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object", "required": ["token"], "properties": { "token": { "type": "string" } } },
+              "example": { "token": "a1b2c3d4e5f6789012345678901234567890abcd" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email verified",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" },
+                "example": { "ok": true, "message": "Email verified successfully. You can now sign in." }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Verify email (link from email)",
+        "parameters": [
+          { "name": "token", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "HTML confirmation page" }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Refresh tokens",
+        "description": "Exchange a valid refresh token for a new access/refresh pair.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RefreshRequest" },
+              "example": {
+                "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbHgxYTIiLCJpYXQiOjE3MTAwMDAwMDAsImV4cCI6MTc0MTUzNjAwMH0.example"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New token pair",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenPair" },
+                "example": {
+                  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbHgxYTIiLCJyb2xlIjoic2Vla2VyIiwiaWF0IjoxNzEwMDAzNjAwLCJleHAiOjE3MTAwMDcyMDB9.example",
+                  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbHgxYTIiLCJpYXQiOjE3MTAwMDM2MDAsImV4cCI6MTc0MTUzOTYwMH0.example"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid refresh token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": { "error": { "message": "Invalid refresh token", "status": 401 } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Log out",
+        "description": "Stateless logout. Client should discard stored tokens.",
+        "responses": {
+          "204": { "description": "Logged out" }
+        }
+      }
+    },
+    "/api/v1/auth/forgot-password": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Request password reset",
+        "description": "Always returns success to avoid email enumeration. A reset token is stored when the email exists.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ForgotPasswordRequest" },
+              "example": { "email": "moyo@example.com" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Request accepted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OkResponse" },
+                "example": { "ok": true }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Reset password",
+        "description": "Set a new password using the token from forgot-password.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ResetPasswordRequest" },
+              "example": {
+                "token": "a1b2c3d4e5f6789012345678901234567890abcd",
+                "password": "newpassword1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OkResponse" },
+                "example": { "ok": true }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": { "error": { "message": "Invalid or expired token", "status": 400 } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/social": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Social login",
+        "description": "Verify a provider ID token and sign in or create an account.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SocialLoginRequest" },
+              "example": { "provider": "google", "token": "ya29.a0AfH6SMBx-provider-id-token" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthSession" },
+                "example": {
+                  "user": {
+                    "id": "clx1a2b3c4d5e6f7g8h9i0j1",
+                    "name": "Moyo Ade",
+                    "email": "moyo@gmail.com",
+                    "role": "seeker",
+                    "listerType": null
+                  },
+                  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example",
+                  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid provider token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": { "error": { "message": "Invalid token", "status": 401 } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get current user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Current user profile",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserProfile" },
+                "example": {
+                  "id": "clx1a2b3c4d5e6f7g8h9i0j1",
+                  "name": "Moyo Ade",
+                  "email": "moyo@example.com",
+                  "role": "seeker",
+                  "listerType": null,
+                  "phone": null,
+                  "avatarUrl": null
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": { "error": { "message": "Unauthorized", "status": 401 } }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Users"],
+        "summary": "Update profile",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateProfileRequest" },
+              "example": {
+                "name": "Moyo Ade",
+                "phone": "+2348012345678",
+                "avatarUrl": "https://cdn.example.com/avatars/moyo.jpg"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated profile",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserProfile" },
+                "example": {
+                  "id": "clx1a2b3c4d5e6f7g8h9i0j1",
+                  "name": "Moyo Ade",
+                  "email": "moyo@example.com",
+                  "role": "seeker",
+                  "listerType": null,
+                  "phone": "+2348012345678",
+                  "avatarUrl": "https://cdn.example.com/avatars/moyo.jpg"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/role": {
+      "patch": {
+        "tags": ["Users"],
+        "summary": "Update role",
+        "description": "Upgrade to lister with a lister type, or switch back to seeker.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateRoleRequest" },
+              "example": { "role": "lister", "listerType": "agent" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated role",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserProfile" },
+                "example": {
+                  "id": "clx1a2b3c4d5e6f7g8h9i0j1",
+                  "name": "Moyo Ade",
+                  "email": "moyo@example.com",
+                  "role": "lister",
+                  "listerType": "agent",
+                  "phone": null,
+                  "avatarUrl": null
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing listerType for lister role",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": { "error": { "message": "listerType required for lister", "status": 400 } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/push-token": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Register push token",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PushTokenRequest" },
+              "example": { "token": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]", "platform": "ios" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Token registered",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OkResponse" },
+                "example": { "ok": true }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/preferences": {
+      "patch": {
+        "tags": ["Users"],
+        "summary": "Save user preferences",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdatePreferencesRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated profile with preferences",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserProfile" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/setup-complete": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Mark setup complete",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Setup finished",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserProfile" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/catalog/setup-options": {
+      "get": {
+        "tags": ["Catalog"],
+        "summary": "Setup reference options",
+        "description": "Cities, listing types, budget presets, genders, bedroom options, and role defaults.",
+        "responses": {
+          "200": {
+            "description": "Catalog payload",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SetupCatalog" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

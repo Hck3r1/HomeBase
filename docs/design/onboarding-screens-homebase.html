@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Onboarding — HomeBase</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    /* HomeBase brand palette */
+    --bg-deep:#15201D;
+    --panel:#1E2F2B;
+    --teal:#2F6359;
+    --teal-mid:#3B7A6F;
+    --sage:#9BB8AE;
+    --offwhite:#EAF1EF;
+    --accent:#3B7A6F;
+    --accent-text:#FFFFFF;
+    --dim:#8A938F;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  body{
+    background:#0D1412;
+    font-family:'Inter', sans-serif;
+    display:flex;
+    flex-wrap:wrap;
+    gap:32px;
+    padding:40px;
+    justify-content:center;
+  }
+
+  .screen{
+    position:relative;
+    width:375px;
+    height:812px;
+    background:var(--bg-deep);
+    border-radius:44px;
+    overflow:hidden;
+    box-shadow:0 0 0 2px #1E2F2B, 0 30px 60px -20px rgba(0,0,0,0.6);
+  }
+
+  canvas.field{
+    position:absolute;
+    top:0; left:0;
+    width:100%;
+    height:100%;
+  }
+
+  .vignette{
+    position:absolute;
+    inset:0;
+    background:radial-gradient(ellipse at 50% 38%, rgba(21,32,29,0) 0%, rgba(21,32,29,0.55) 62%, rgba(13,20,18,0.96) 100%);
+    pointer-events:none;
+  }
+
+  .topbar{
+    position:absolute;
+    top:0; left:0; right:0;
+    padding:20px 28px 0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    z-index:5;
+  }
+
+  .skip{
+    font-size:13px;
+    color:var(--dim);
+    letter-spacing:0.02em;
+    font-weight:500;
+  }
+
+  .dots{
+    position:absolute;
+    bottom:128px;
+    left:0; right:0;
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    z-index:5;
+  }
+  .dot{ width:6px; height:6px; border-radius:50%; background:var(--teal-mid); }
+  .dot.active{ width:20px; border-radius:3px; background:var(--accent); }
+
+  .content{
+    position:absolute;
+    bottom:0; left:0; right:0;
+    padding:0 32px 56px;
+    z-index:5;
+  }
+
+  .eyebrow{
+    font-family:'Inter', sans-serif;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--sage);
+    margin-bottom:14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .eyebrow::before{
+    content:'';
+    width:14px; height:1px;
+    background:var(--sage);
+    display:inline-block;
+  }
+
+  h1{
+    font-family:'Archivo Expanded', sans-serif;
+    font-weight:600;
+    font-size:32px;
+    line-height:1.12;
+    letter-spacing:-0.01em;
+    color:var(--offwhite);
+    margin-bottom:14px;
+  }
+  h1 em{
+    font-style:normal;
+    color:var(--sage);
+  }
+
+  p.sub{
+    font-size:15px;
+    line-height:1.55;
+    color:var(--dim);
+    max-width:300px;
+    margin-bottom:36px;
+  }
+
+  .cta{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+  }
+
+  .btn-next{
+    flex:1;
+    background:var(--accent);
+    color:var(--accent-text);
+    border:none;
+    border-radius:14px;
+    padding:17px 0;
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    letter-spacing:0.01em;
+    text-align:center;
+  }
+
+  .btn-circle{
+    width:54px; height:54px;
+    border-radius:50%;
+    border:1px solid var(--teal-mid);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+  }
+  .btn-circle svg{ width:18px; height:18px; }
+
+  .stage-label{
+    position:absolute;
+    top:60px; left:0; right:0;
+    text-align:center;
+    font-size:11px;
+    letter-spacing:0.3em;
+    text-transform:uppercase;
+    color:var(--dim);
+    z-index:5;
+  }
+</style>
+</head>
+<body>
+
+<!-- SCREEN 1 — BROWSE LISTINGS -->
+<div class="screen" id="screen1">
+  <canvas class="field"></canvas>
+  <div class="vignette"></div>
+  <div class="topbar"><span></span><span class="skip">Skip</span></div>
+  <div class="stage-label">01 — Discover</div>
+  <div class="dots">
+    <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+  <div class="content">
+    <div class="eyebrow">Browse listings</div>
+    <h1>Every home,<br>mapped from<br><em>real signals.</em></h1>
+    <p class="sub">Thousands of verified rentals, sales, and new builds — filtered to what actually fits your life.</p>
+    <div class="cta">
+      <button class="btn-next">Continue</button>
+      <div class="btn-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#9BB8AE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 2 — VERIFIED AGENTS -->
+<div class="screen" id="screen2">
+  <canvas class="field"></canvas>
+  <div class="vignette"></div>
+  <div class="topbar"><span></span><span class="skip">Skip</span></div>
+  <div class="stage-label">02 — Trust</div>
+  <div class="dots">
+    <div class="dot"></div><div class="dot active"></div><div class="dot"></div>
+  </div>
+  <div class="content">
+    <div class="eyebrow">Verified agents</div>
+    <h1>People you<br>can actually<br><em>vouch for.</em></h1>
+    <p class="sub">Every agent is licensed, reviewed, and ID-checked before they ever message you.</p>
+    <div class="cta">
+      <button class="btn-next">Continue</button>
+      <div class="btn-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#9BB8AE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 3 — SECURE PAYMENTS -->
+<div class="screen" id="screen3">
+  <canvas class="field"></canvas>
+  <div class="vignette"></div>
+  <div class="topbar"><span></span><span class="skip">Skip</span></div>
+  <div class="stage-label">03 — Settle</div>
+  <div class="dots">
+    <div class="dot"></div><div class="dot"></div><div class="dot active"></div>
+  </div>
+  <div class="content">
+    <div class="eyebrow">Secure payments</div>
+    <h1>Funds held safe<br>until both sides<br><em>say go.</em></h1>
+    <p class="sub">Escrow-backed transfers mean nothing moves until you've confirmed the deal in full.</p>
+    <div class="cta">
+      <button class="btn-next">Get started</button>
+      <div class="btn-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#9BB8AE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------------------------------------------------
+   Particle field engine
+   Particles drift, connect within radius, and on each cycle
+   gently converge into a target shape (house / shield-check / lock)
+   then dissolve back to ambient drift.
+---------------------------------------------------------- */
+
+function buildShapePoints(type, w, h, count){
+  const pts = [];
+  const cx = w/2, cy = h*0.40;
+
+  if(type === 'house'){
+    const scale = w*0.40;
+    const baseY = cy + scale*0.52;
+    const wallTopY = cy - scale*0.05;
+    const roofPeakY = cy - scale*0.62;
+    const leftX = cx - scale*0.50, rightX = cx + scale*0.50;
+    const roofLeftX = cx - scale*0.62, roofRightX = cx + scale*0.62;
+
+    const doorW = scale*0.22, doorH = scale*0.42;
+    const doorLX = cx - doorW/2, doorRX = cx + doorW/2;
+    const doorTopY = baseY - doorH;
+
+    const edges = [
+      [leftX, wallTopY, leftX, baseY],
+      [leftX, baseY, doorLX, baseY],
+      [doorLX, baseY, doorLX, doorTopY],
+      [doorLX, doorTopY, doorRX, doorTopY],
+      [doorRX, doorTopY, doorRX, baseY],
+      [doorRX, baseY, rightX, baseY],
+      [rightX, baseY, rightX, wallTopY],
+      [roofLeftX, wallTopY, cx, roofPeakY],
+      [cx, roofPeakY, roofRightX, wallTopY],
+      [roofLeftX, wallTopY, roofRightX, wallTopY]
+    ];
+    const lens = edges.map(e => Math.hypot(e[2]-e[0], e[3]-e[1]));
+    const total = lens.reduce((a,b)=>a+b,0);
+    for(let i=0;i<count;i++){
+      let t = (i/count)*total;
+      let ei = 0;
+      while(t > lens[ei] && ei < edges.length-1){ t -= lens[ei]; ei++; }
+      const [x1,y1,x2,y2] = edges[ei];
+      const f = lens[ei] ? t/lens[ei] : 0;
+      pts.push({x: x1+(x2-x1)*f, y: y1+(y2-y1)*f});
+    }
+  }
+
+  if(type === 'shield'){
+    const scale = w*0.36;
+    const top = cy - scale*0.62;
+    const bottom = cy + scale*0.62;
+    const leftX = cx - scale*0.5;
+    const rightX = cx + scale*0.5;
+    const midY = cy + scale*0.08;
+
+    const shieldEdges = [
+      [leftX, top, rightX, top],
+      [rightX, top, rightX, midY],
+      [rightX, midY, cx, bottom],
+      [cx, bottom, leftX, midY],
+      [leftX, midY, leftX, top]
+    ];
+    const checkEdges = [
+      [cx - scale*0.26, cy, cx - scale*0.06, cy + scale*0.22],
+      [cx - scale*0.06, cy + scale*0.22, cx + scale*0.30, cy - scale*0.18]
+    ];
+
+    const shieldLens = shieldEdges.map(e => Math.hypot(e[2]-e[0], e[3]-e[1]));
+    const shieldTotal = shieldLens.reduce((a,b)=>a+b,0);
+    const checkLens = checkEdges.map(e => Math.hypot(e[2]-e[0], e[3]-e[1]));
+    const checkTotal = checkLens.reduce((a,b)=>a+b,0);
+
+    const checkCount = Math.floor(count*0.28);
+    const shieldCount = count - checkCount;
+
+    for(let i=0;i<shieldCount;i++){
+      let t = (i/shieldCount)*shieldTotal;
+      let ei = 0;
+      while(t > shieldLens[ei] && ei < shieldEdges.length-1){ t -= shieldLens[ei]; ei++; }
+      const [x1,y1,x2,y2] = shieldEdges[ei];
+      const f = shieldLens[ei] ? t/shieldLens[ei] : 0;
+      pts.push({x: x1+(x2-x1)*f, y: y1+(y2-y1)*f});
+    }
+    for(let i=0;i<checkCount;i++){
+      let t = (i/checkCount)*checkTotal;
+      let ei = 0;
+      while(t > checkLens[ei] && ei < checkEdges.length-1){ t -= checkLens[ei]; ei++; }
+      const [x1,y1,x2,y2] = checkEdges[ei];
+      const f = checkLens[ei] ? t/checkLens[ei] : 0;
+      pts.push({x: x1+(x2-x1)*f, y: y1+(y2-y1)*f});
+    }
+  }
+
+  if(type === 'lock'){
+    const scale = w*0.30;
+    const bodyTop = cy - scale*0.05;
+    const bodyW = scale*0.95, bodyH = scale*0.95;
+    const edges = [
+      [cx-bodyW/2, bodyTop, cx+bodyW/2, bodyTop],
+      [cx+bodyW/2, bodyTop, cx+bodyW/2, bodyTop+bodyH],
+      [cx+bodyW/2, bodyTop+bodyH, cx-bodyW/2, bodyTop+bodyH],
+      [cx-bodyW/2, bodyTop+bodyH, cx-bodyW/2, bodyTop]
+    ];
+    const lens = edges.map(e => Math.hypot(e[2]-e[0], e[3]-e[1]));
+    const total = lens.reduce((a,b)=>a+b,0);
+    const bodyCount = Math.floor(count*0.62);
+    for(let i=0;i<bodyCount;i++){
+      let t = (i/bodyCount)*total;
+      let ei = 0;
+      while(t > lens[ei] && ei < edges.length-1){ t -= lens[ei]; ei++; }
+      const [x1,y1,x2,y2] = edges[ei];
+      const f = lens[ei] ? t/lens[ei] : 0;
+      pts.push({x: x1+(x2-x1)*f, y: y1+(y2-y1)*f});
+    }
+    const shackleCount = count - bodyCount;
+    const shackleR = bodyW*0.38;
+    const shackleCy = bodyTop - shackleR*0.15;
+    for(let i=0;i<shackleCount;i++){
+      const a = Math.PI + (i/shackleCount)*Math.PI;
+      pts.push({x: cx + Math.cos(a)*shackleR, y: shackleCy + Math.sin(a)*shackleR});
+    }
+  }
+
+  return pts;
+}
+
+function initField(canvas, shapeType, accentRGB){
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let w, h;
+
+  function resize(){
+    w = canvas.clientWidth;
+    h = canvas.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const COUNT = 64;
+  const sageRGB = [155,184,174];
+  const accentRGB = [59,122,111];
+
+  let shapePts = buildShapePoints(shapeType, w, h, COUNT);
+
+  const particles = [];
+  for(let i=0;i<COUNT;i++){
+    particles.push({
+      x: Math.random()*w,
+      y: Math.random()*h,
+      vx: (Math.random()-0.5)*0.18,
+      vy: (Math.random()-0.5)*0.18,
+      tx: shapePts[i] ? shapePts[i].x : Math.random()*w,
+      ty: shapePts[i] ? shapePts[i].y : Math.random()*h,
+      r: 1.2 + Math.random()*1.6,
+      phase: Math.random()*Math.PI*2,
+      isAccent: i % 11 === 0
+    });
+  }
+
+  const CYCLE = 7000;
+  const FORM_START = 0.15, FORM_END = 0.55, HOLD_END = 0.78, DISSOLVE_END = 1.0;
+  let startTime = performance.now() - Math.random()*CYCLE;
+
+  function easeInOutCubic(t){
+    return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+  }
+
+  function step(now){
+    const elapsed = (now - startTime) % CYCLE;
+    const cycleT = elapsed / CYCLE;
+
+    let convergence = 0;
+    if(cycleT < FORM_START){
+      convergence = 0;
+    } else if(cycleT < FORM_END){
+      convergence = easeInOutCubic((cycleT - FORM_START) / (FORM_END - FORM_START));
+    } else if(cycleT < HOLD_END){
+      convergence = 1;
+    } else {
+      convergence = 1 - easeInOutCubic((cycleT - HOLD_END) / (DISSOLVE_END - HOLD_END));
+    }
+
+    ctx.clearRect(0,0,w,h);
+
+    for(const p of particles){
+      p.x += p.vx * (1-convergence*0.8);
+      p.y += p.vy * (1-convergence*0.8);
+      p.phase += 0.02;
+
+      if(p.x < -10) p.x = w+10;
+      if(p.x > w+10) p.x = -10;
+      if(p.y < -10) p.y = h+10;
+      if(p.y > h+10) p.y = -10;
+
+      p.drawX = p.x + (p.tx - p.x) * convergence;
+      p.drawY = p.y + (p.ty - p.y) * convergence;
+    }
+
+    const linkDist = 64;
+    ctx.lineWidth = 0.6;
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const a = particles[i], b = particles[j];
+        const dx = a.drawX-b.drawX, dy = a.drawY-b.drawY;
+        const d = Math.sqrt(dx*dx+dy*dy);
+        const maxD = convergence > 0.3 ? linkDist*1.4 : linkDist;
+        if(d < maxD){
+          const baseAlpha = (1 - d/maxD) * (0.10 + convergence*0.22);
+          ctx.strokeStyle = `rgba(${sageRGB[0]},${sageRGB[1]},${sageRGB[2]},${baseAlpha})`;
+          ctx.beginPath();
+          ctx.moveTo(a.drawX, a.drawY);
+          ctx.lineTo(b.drawX, b.drawY);
+          ctx.stroke();
+        }
+      }
+    }
+
+    for(const p of particles){
+      const flicker = 0.7 + Math.sin(p.phase)*0.3;
+      const rgb = p.isAccent ? accentRGB : sageRGB;
+      const alpha = (0.35 + convergence*0.5) * flicker;
+      ctx.beginPath();
+      ctx.arc(p.drawX, p.drawY, p.r + convergence*0.6, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
+      ctx.fill();
+
+      if(convergence > 0.5){
+        ctx.beginPath();
+        ctx.arc(p.drawX, p.drawY, (p.r+convergence*0.6)*2.4, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha*0.08})`;
+        ctx.fill();
+      }
+    }
+
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+document.querySelectorAll('#screen1 canvas.field').forEach(c => initField(c, 'house'));
+document.querySelectorAll('#screen2 canvas.field').forEach(c => initField(c, 'shield'));
+document.querySelectorAll('#screen3 canvas.field').forEach(c => initField(c, 'lock'));
+</script>
+
+</body>
+</html>

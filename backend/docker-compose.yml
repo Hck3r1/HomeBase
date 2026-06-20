@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: homebase
       POSTGRES_DB: homebase
     ports:
-      - '5432:5432'
+      - '5433:5432'
     volumes:
       - homebase_pg:/var/lib/postgresql/data
 volumes:

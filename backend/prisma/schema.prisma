@@ -10,8 +10,205 @@ datasource db {
 }
 
 // Minimal model so the first migration is non-empty.
-// Real domain models are added in later phases.
 model HealthCheck {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
+}
+
+enum Role {
+  seeker
+  lister
+}
+
+enum ListerType {
+  agent
+  landlord
+}
+
+enum Gender {
+  male
+  female
+  prefer_not_to_say
+}
+
+enum ListingInterest {
+  rent
+  sale
+  shortstay
+}
+
+enum SetupStep {
+  profile
+  role
+  preferences
+  kyc
+}
+
+model User {
+  id              String         @id @default(uuid())
+  name            String
+  email           String         @unique
+  passwordHash    String?
+  role            Role           @default(seeker)
+  listerType      ListerType?
+  phone           String?
+  avatarUrl       String?
+  dateOfBirth     DateTime?
+  gender          Gender?
+  setupStep       SetupStep      @default(profile)
+  setupCompletedAt DateTime?
+  emailVerifiedAt DateTime?
+  resetToken      String?
+  resetTokenExp   DateTime?
+  resetOtpHash    String?
+  resetOtpExp     DateTime?
+  emailVerifyToken    String?
+  emailVerifyTokenExp DateTime?
+  authProviders   AuthProvider[]
+  pushTokens      PushToken[]
+  preferences     UserPreference?
+  listings        Listing[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+enum ListingType {
+  rent
+  sale
+  shortstay
+}
+
+enum ListingStatus {
+  draft
+  active
+  paused
+  rented
+  sold
+}
+
+model Listing {
+  id            String         @id @default(uuid())
+  ownerId       String
+  owner         User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  listingType   ListingType
+  status        ListingStatus  @default(active)
+  title         String
+  description   String
+  propertyType  String
+  bedrooms      Int            @default(0)
+  bathrooms     Int            @default(0)
+  areaSqm       Int?
+  amenities     String[]       @default([])
+  address       String
+  city          String
+  state         String
+  lat           Float
+  lng           Float
+  photos        ListingPhoto[]
+  rent          ListingRentDetails?
+  sale          ListingSaleDetails?
+  shortstay     ListingShortstayDetails?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([listingType, status])
+  @@index([city])
+}
+
+model ListingPhoto {
+  id                 String   @id @default(uuid())
+  listingId          String
+  listing            Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  cloudinaryPublicId String
+  url                String
+  position           Int      @default(0)
+  createdAt          DateTime @default(now())
+}
+
+model ListingRentDetails {
+  listingId       String    @id
+  listing         Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  monthlyRent     Int?
+  annualRent      Int?
+  securityDeposit Int       @default(0)
+  leaseTermMonths Int       @default(12)
+  availableFrom   DateTime?
+}
+
+model ListingSaleDetails {
+  listingId         String  @id
+  listing           Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  salePrice         Int
+  negotiable        Boolean @default(false)
+  titleDocsVerified Boolean @default(false)
+}
+
+model ListingShortstayDetails {
+  listingId   String  @id
+  listing     Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  nightlyRate Int
+  cleaningFee Int     @default(0)
+  minNights   Int     @default(1)
+  maxNights   Int     @default(30)
+  maxGuests   Int     @default(2)
+  houseRules  String?
+}
+
+model UserPreference {
+  id             String            @id @default(uuid())
+  userId         String            @unique
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listingTypes   ListingInterest[]
+  budgetMin      Int?
+  budgetMax      Int?
+  preferredCity  String?
+  bedroomsMin    Int?
+  serviceAreas   String[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+model AuthProvider {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider    String
+  providerUid String
+  createdAt   DateTime @default(now())
+
+  @@unique([provider, providerUid])
+}
+
+model PushToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  platform  String
+  createdAt DateTime @default(now())
+}
+
+enum RefCategory {
+  city
+  listing_type
+  budget_preset_seeker
+  budget_preset_lister
+  gender
+  bedroom
+}
+
+model RefOption {
+  id        String      @id @default(uuid())
+  category  RefCategory
+  code      String
+  label     String
+  minValue  Int?
+  maxValue  Int?
+  sortOrder Int         @default(0)
+  active    Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([category, code])
+  @@index([category, sortOrder])
 }
