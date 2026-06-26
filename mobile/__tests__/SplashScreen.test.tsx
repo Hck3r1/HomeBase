@@ -10,10 +10,6 @@ jest.mock('expo-secure-store', () => ({
   deleteItemAsync: jest.fn(async (k: string) => void delete store[k]),
 }));
 
-jest.mock('../src/components/HomeBaseMark', () => ({
-  HomeBaseMark: () => null,
-}));
-
 const navigation = { replace: jest.fn(), navigate: jest.fn() };
 
 describe('SplashScreen', () => {

@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radii.md,
     borderWidth: 1,
     borderColor: theme.colors.line,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.input,
     alignItems: 'center',
     justifyContent: 'center',
   },

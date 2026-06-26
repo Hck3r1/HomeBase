@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   Alert,
+  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -12,21 +13,22 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppTextInput } from '../../components/TextInput';
 import { Button } from '../../components/Button';
 import { ScreenHeader } from '../../components/ScreenHeader';
 import { FieldLabel } from '../../components/FieldLabel';
-import { InputGroup } from '../../components/InputGroup';
+import { AddressAutocomplete } from '../../components/AddressAutocomplete';
 import { FormSection } from '../../components/lister/FormSection';
 import { WizardStepHeader } from '../../components/lister/WizardStepHeader';
+import { useToast } from '../../components/Toast';
 import { theme } from '../../theme';
 import { ListingType } from '../../types/listing';
 import { CreateListingInput, signPhotoUpload, addPhoto } from '../../api/listings';
 import { useCreateListing } from '../../hooks/listings';
 import { getApiErrorMessage } from '../../lib/apiErrors';
 import { formatNaira } from '../../lib/format';
+import { getCurrentPlace } from '../../lib/location';
 
 type Step = 0 | 1 | 2 | 3 | 4;
 
@@ -71,9 +73,15 @@ const TYPE_OPTIONS: {
 
 const PROPERTY_TYPES = ['apartment', 'house', 'duplex', 'studio', 'land'];
 
+interface LocalPhoto {
+  uri: string;
+  mimeType: string;
+  fileName: string;
+}
+
 export function CreateListingScreen() {
   const navigation = useNavigation<any>();
-  const insets = useSafeAreaInsets();
+  const { showToast } = useToast();
   const createMutation = useCreateListing();
   const [step, setStep] = React.useState<Step>(0);
   const [showCoords, setShowCoords] = React.useState(false);
@@ -90,7 +98,8 @@ export function CreateListingScreen() {
   const [lat, setLat] = React.useState('6.5244');
   const [lng, setLng] = React.useState('3.3792');
   const [price, setPrice] = React.useState('');
-  const [localPhotos, setLocalPhotos] = React.useState<string[]>([]);
+  const [localPhotos, setLocalPhotos] = React.useState<LocalPhoto[]>([]);
+  const [locating, setLocating] = React.useState(false);
 
   const meta = STEP_META[step];
   const pricePreview =
@@ -98,15 +107,63 @@ export function CreateListingScreen() {
       ? formatNaira(Math.round(Number(price) * 100))
       : null;
 
+  const showValidationToast = (err: string | null) => {
+    if (!err) return false;
+    showToast(err);
+    return true;
+  };
+
+  const formValues = {
+    title,
+    description,
+    propertyType,
+    price,
+    address,
+    city,
+    stateName,
+    lat,
+    lng,
+  };
+
   const next = () => {
-    const err = validateStep(step);
-    if (err) {
-      Alert.alert('Check your inputs', err);
-      return;
-    }
+    if (showValidationToast(validateStep(step, formValues))) return;
     setStep((s) => Math.min(4, s + 1) as Step);
   };
   const back = () => setStep((s) => Math.max(0, s - 1) as Step);
+
+  const useCurrentLocation = async () => {
+    setLocating(true);
+    try {
+      const place = await getCurrentPlace();
+      setLat(String(place.lat));
+      setLng(String(place.lng));
+      if (place.address) setAddress(place.address);
+      if (place.city) setCity(place.city);
+      if (place.state) setStateName(place.state);
+      setShowCoords(true);
+      showToast('Location updated from your current position.');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Could not get your current location.';
+      showToast(message);
+    } finally {
+      setLocating(false);
+    }
+  };
+
+  const applyAddressSuggestion = (place: {
+    address: string;
+    city: string;
+    state: string;
+    lat: number;
+    lng: number;
+  }) => {
+    setAddress(place.address);
+    if (place.city) setCity(place.city);
+    if (place.state) setStateName(place.state);
+    setLat(String(place.lat));
+    setLng(String(place.lng));
+    setShowCoords(true);
+  };
 
   const pickPhotos = async () => {
     if (localPhotos.length >= 10) {
@@ -125,24 +182,35 @@ export function CreateListingScreen() {
     });
     if (!result.canceled) {
       setLocalPhotos((prev) => {
-        const nextPhotos = [...prev, ...result.assets.map((a) => a.uri)];
+        const nextPhotos = [
+          ...prev,
+          ...result.assets.map((asset, i) => ({
+            uri: asset.uri,
+            mimeType: asset.mimeType ?? 'image/jpeg',
+            fileName: asset.fileName ?? `photo-${Date.now()}-${i}.jpg`,
+          })),
+        ];
         return nextPhotos.slice(0, 10);
       });
     }
   };
 
   const removePhoto = (uri: string) => {
-    setLocalPhotos((prev) => prev.filter((p) => p !== uri));
+    setLocalPhotos((prev) => prev.filter((p) => p.uri !== uri));
   };
 
-  const uploadPhoto = async (listingId: string, uri: string, position: number) => {
+  const uploadPhoto = async (listingId: string, photo: LocalPhoto, position: number) => {
     const sig = await signPhotoUpload(listingId);
     if (!sig.apiKey || !sig.cloudName) {
       throw new Error('Photo upload is not configured on the server.');
     }
     const form = new FormData();
-    form.append('file', { uri, type: 'image/jpeg', name: `photo-${position}.jpg` } as unknown as Blob);
-    form.append('api_key', sig.apiKey);
+    form.append('file', {
+      uri: photo.uri,
+      type: photo.mimeType,
+      name: photo.fileName,
+    } as unknown as Blob);
+    form.append('api_key', String(sig.apiKey));
     form.append('timestamp', String(sig.timestamp));
     form.append('signature', sig.signature);
     form.append('folder', sig.folder);
@@ -150,7 +218,10 @@ export function CreateListingScreen() {
       method: 'POST',
       body: form,
     });
-    if (!res.ok) throw new Error('Cloudinary upload failed');
+    if (!res.ok) {
+      const detail = await res.text();
+      throw new Error(detail || 'Cloudinary upload failed');
+    }
     const json = (await res.json()) as { public_id: string; secure_url: string };
     await addPhoto(listingId, { cloudinaryPublicId: json.public_id, url: json.secure_url, position });
   };
@@ -178,27 +249,36 @@ export function CreateListingScreen() {
   };
 
   const submit = async () => {
-    const err = validateStep(4) || validateStep(3) || validateStep(1);
-    if (err) {
-      Alert.alert('Check your inputs', err);
-      return;
-    }
+    const err =
+      validateStep(4, formValues) || validateStep(3, formValues) || validateStep(1, formValues);
+    if (showValidationToast(err)) return;
     try {
       const listing = await createMutation.mutateAsync(buildInput());
       let photosUploaded = 0;
+      let lastPhotoError: string | null = null;
       for (let i = 0; i < localPhotos.length; i += 1) {
         try {
           await uploadPhoto(listing.id, localPhotos[i], i);
           photosUploaded += 1;
-        } catch {
-          // Continue if Cloudinary isn't configured
+        } catch (e) {
+          lastPhotoError = e instanceof Error ? e.message : 'Photo upload failed';
         }
       }
-      const photoNote =
-        localPhotos.length > 0 && photosUploaded === 0
-          ? ' Listing saved, but photos could not be uploaded (check Cloudinary config).'
-          : '';
-      Alert.alert('Listing created', `Your listing is live.${photoNote}`);
+      if (localPhotos.length > 0 && photosUploaded === 0) {
+        showToast(
+          lastPhotoError?.includes('not configured')
+            ? 'Listing saved, but photo upload is not configured on the server.'
+            : 'Listing saved, but photos could not be uploaded. Try again from edit listing.',
+        );
+      } else if (photosUploaded > 0 && photosUploaded < localPhotos.length) {
+        showToast(`Listing saved with ${photosUploaded} of ${localPhotos.length} photos.`);
+      }
+      Alert.alert(
+        'Listing created',
+        photosUploaded > 0
+          ? `Your listing is live with ${photosUploaded} photo${photosUploaded === 1 ? '' : 's'}.`
+          : 'Your listing is live.',
+      );
       navigation.navigate('MyListings');
     } catch (e) {
       Alert.alert('Could not create listing', getApiErrorMessage(e));
@@ -257,12 +337,19 @@ export function CreateListingScreen() {
 
           {step === 1 && (
             <FormSection>
-              <InputGroup>
+              <FieldLabel required>Title</FieldLabel>
+              <View style={styles.inputBox}>
                 <AppTextInput
                   placeholder="e.g. Two-bed flat in Yaba"
                   value={title}
                   onChangeText={setTitle}
                 />
+              </View>
+
+              <FieldLabel required style={styles.fieldGap}>
+                Description
+              </FieldLabel>
+              <View style={styles.inputBox}>
                 <AppTextInput
                   placeholder="Describe the property, neighborhood, and highlights"
                   value={description}
@@ -270,9 +357,11 @@ export function CreateListingScreen() {
                   multiline
                   style={styles.multiline}
                 />
-              </InputGroup>
+              </View>
 
-              <FieldLabel style={styles.fieldGap}>Property type</FieldLabel>
+              <FieldLabel required style={styles.fieldGap}>
+                Property type
+              </FieldLabel>
               <View style={styles.chips}>
                 {PROPERTY_TYPES.map((p) => (
                   <Pressable
@@ -332,9 +421,9 @@ export function CreateListingScreen() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.photoRow}
                 >
-                  {localPhotos.map((uri, index) => (
-                    <Pressable key={uri} onPress={() => removePhoto(uri)} style={styles.thumbWrap}>
-                      <Image source={{ uri }} style={styles.thumb} />
+                  {localPhotos.map((photo, index) => (
+                    <Pressable key={photo.uri} onPress={() => removePhoto(photo.uri)} style={styles.thumbWrap}>
+                      <Image source={{ uri: photo.uri }} style={styles.thumb} />
                       {index === 0 ? (
                         <View style={styles.coverBadge}>
                           <Text style={styles.coverText}>Cover</Text>
@@ -352,7 +441,7 @@ export function CreateListingScreen() {
 
           {step === 3 && (
             <FormSection>
-              <FieldLabel>
+              <FieldLabel required>
                 {type === 'shortstay'
                   ? 'Nightly rate (₦)'
                   : type === 'sale'
@@ -385,20 +474,42 @@ export function CreateListingScreen() {
 
           {step === 4 && (
             <FormSection>
-              <FieldLabel>Street address</FieldLabel>
-              <View style={styles.inputBox}>
-                <AppTextInput placeholder="Full street address" value={address} onChangeText={setAddress} />
-              </View>
+              <Pressable
+                style={[styles.locationBtn, locating && styles.locationBtnDisabled]}
+                onPress={useCurrentLocation}
+                disabled={locating}
+              >
+                {locating ? (
+                  <ActivityIndicator color={theme.colors.primary} size="small" />
+                ) : (
+                  <Ionicons name="locate" size={20} color={theme.colors.primary} />
+                )}
+                <Text style={styles.locationBtnText}>
+                  {locating ? 'Getting location…' : 'Use current location'}
+                </Text>
+              </Pressable>
+
+              <FieldLabel required style={styles.fieldGap}>
+                Street address
+              </FieldLabel>
+              <AddressAutocomplete
+                value={address}
+                onChangeText={setAddress}
+                onSelect={applyAddressSuggestion}
+                city={city}
+                state={stateName}
+              />
+              <Text style={styles.hint}>Start typing to see address suggestions.</Text>
 
               <View style={[styles.row, styles.fieldGap]}>
                 <View style={styles.half}>
-                  <FieldLabel>City</FieldLabel>
+                  <FieldLabel required>City</FieldLabel>
                   <View style={styles.inputBox}>
                     <AppTextInput placeholder="City" value={city} onChangeText={setCity} />
                   </View>
                 </View>
                 <View style={styles.half}>
-                  <FieldLabel>State</FieldLabel>
+                  <FieldLabel required>State</FieldLabel>
                   <View style={styles.inputBox}>
                     <AppTextInput placeholder="State" value={stateName} onChangeText={setStateName} />
                   </View>
@@ -453,7 +564,7 @@ export function CreateListingScreen() {
           )}
         </ScrollView>
 
-        <View style={[styles.footer, { paddingBottom: insets.bottom + theme.spacing(2) }]}>
+        <View style={styles.footer}>
           {step > 0 ? (
             <Button label="Back" variant="secondary" onPress={back} style={styles.footerBtn} />
           ) : (
@@ -475,21 +586,35 @@ export function CreateListingScreen() {
   );
 }
 
-function validateStep(step: Step): string | null {
+interface ListingFormValues {
+  title: string;
+  description: string;
+  propertyType: string;
+  price: string;
+  address: string;
+  city: string;
+  stateName: string;
+  lat: string;
+  lng: string;
+}
+
+function validateStep(step: Step, form: ListingFormValues): string | null {
   switch (step) {
     case 1:
-      if (title.trim().length < 3) return 'Title must be at least 3 characters.';
-      if (description.trim().length < 10) return 'Description must be at least 10 characters.';
-      if (propertyType.trim().length < 2) return 'Pick a property type.';
+      if (form.title.trim().length < 3) return 'Please fill in the title before continuing.';
+      if (form.description.trim().length < 10) return 'Please fill in the description before continuing.';
+      if (form.propertyType.trim().length < 2) return 'Please select a property type before continuing.';
       return null;
     case 3:
-      if (!price || Number(price) <= 0) return 'Enter a valid price in Naira.';
+      if (!form.price || Number(form.price) <= 0) return 'Please enter a valid price before continuing.';
       return null;
     case 4:
-      if (address.trim().length < 3) return 'Enter a full street address.';
-      if (city.trim().length < 2) return 'Enter a city.';
-      if (stateName.trim().length < 2) return 'Enter a state.';
-      if (Number.isNaN(Number(lat)) || Number.isNaN(Number(lng))) return 'Enter valid coordinates.';
+      if (form.address.trim().length < 3) return 'Please fill in the street address before continuing.';
+      if (form.city.trim().length < 2) return 'Please fill in the city before continuing.';
+      if (form.stateName.trim().length < 2) return 'Please fill in the state before continuing.';
+      if (Number.isNaN(Number(form.lat)) || Number.isNaN(Number(form.lng))) {
+        return 'Please enter valid map coordinates.';
+      }
       return null;
     default:
       return null;
@@ -501,7 +626,9 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   scroll: {
     paddingHorizontal: theme.spacing(3),
+    paddingTop: theme.spacing(1),
     paddingBottom: theme.spacing(2),
+    flexGrow: 1,
   },
   typeList: { gap: theme.spacing(1.5) },
   typeCard: {
@@ -558,11 +685,11 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: theme.spacing(1.5) },
   half: { flex: 1 },
   inputBox: {
-    marginTop: theme.spacing(0.5),
     borderWidth: 1,
     borderColor: theme.colors.line,
     borderRadius: theme.radii.md,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.input,
+    overflow: 'hidden',
   },
   uploadZone: {
     alignItems: 'center',
@@ -631,12 +758,12 @@ const styles = StyleSheet.create({
   priceBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: theme.spacing(0.5),
     borderWidth: 1,
     borderColor: theme.colors.line,
     borderRadius: theme.radii.lg,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.input,
     paddingLeft: theme.spacing(2),
+    overflow: 'hidden',
   },
   currency: {
     fontSize: theme.font.sizeLg,
@@ -677,11 +804,30 @@ const styles = StyleSheet.create({
     fontSize: theme.font.sizeSm,
     lineHeight: 18,
   },
+  locationBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing(1),
+    paddingVertical: theme.spacing(1.5),
+    paddingHorizontal: theme.spacing(2),
+    borderRadius: theme.radii.lg,
+    borderWidth: 1.5,
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primaryLight,
+  },
+  locationBtnDisabled: { opacity: 0.7 },
+  locationBtnText: {
+    color: theme.colors.primaryDark,
+    fontSize: theme.font.sizeSm,
+    fontWeight: theme.font.weightBold,
+  },
   footer: {
     flexDirection: 'row',
     gap: theme.spacing(1.5),
     paddingHorizontal: theme.spacing(3),
-    paddingTop: theme.spacing(2),
+    paddingTop: theme.spacing(1.5),
+    paddingBottom: theme.spacing(2),
     borderTopWidth: 1,
     borderTopColor: theme.colors.line,
     backgroundColor: theme.colors.white,

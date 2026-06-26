@@ -14,8 +14,8 @@ describe('SignUpScreen', () => {
     const { getByPlaceholderText, getByText } = render(
       <SignUpScreen navigation={navigation as any} route={{ key: 'SignUp', name: 'SignUp' }} />,
     );
-    fireEvent.changeText(getByPlaceholderText('First Name'), 'Moyo');
-    fireEvent.changeText(getByPlaceholderText('Last Name'), 'Ade');
+    fireEvent.changeText(getByPlaceholderText('First name'), 'Moyo');
+    fireEvent.changeText(getByPlaceholderText('Last name'), 'Ade');
     fireEvent.changeText(getByPlaceholderText('you@example.com'), 'a@x.com');
     fireEvent.changeText(getByPlaceholderText('At least 8 characters'), '123');
     fireEvent.press(getByText('Sign up'));

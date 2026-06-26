@@ -64,15 +64,7 @@ export interface Listing {
   updatedAt: string;
 }
 
-export interface NearbyListing {
-  id: string;
-  title: string;
-  listingType: ListingType;
-  status: ListingStatus;
-  city: string;
-  state: string;
-  lat: number;
-  lng: number;
+export interface NearbyListing extends Listing {
   distanceMeters: number;
 }
 

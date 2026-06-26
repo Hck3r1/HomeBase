@@ -7,6 +7,8 @@ export const theme = {
     muted: '#8A938F',
     line: '#E6EAE8',
     card: '#F3F5F4',
+    input: '#F5F5F5',
+    starLight: '#FFF8E7',
     chip: '#EAF1EF',
     white: '#FFFFFF',
     surface: '#FAFBFA',

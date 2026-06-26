@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { HomeBaseMark } from '../components/HomeBaseMark';
 import { theme } from '../theme';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -41,6 +42,8 @@ export function MainTabBar({ state, descriptors, navigation }: BottomTabBarProps
             }
           };
 
+          const isHome = route.name === 'Home';
+
           return (
             <Pressable
               key={route.key}
@@ -51,11 +54,18 @@ export function MainTabBar({ state, descriptors, navigation }: BottomTabBarProps
               style={styles.tab}
             >
               <View style={[styles.iconWrap, isFocused && styles.iconWrapActive]}>
-                <Ionicons
-                  name={isFocused ? icons.active : icons.inactive}
-                  size={22}
-                  color={isFocused ? theme.colors.primary : theme.colors.muted}
-                />
+                {isHome ? (
+                  <HomeBaseMark
+                    size={22}
+                    color={isFocused ? theme.colors.primary : theme.colors.muted}
+                  />
+                ) : (
+                  <Ionicons
+                    name={isFocused ? icons.active : icons.inactive}
+                    size={22}
+                    color={isFocused ? theme.colors.primary : theme.colors.muted}
+                  />
+                )}
               </View>
               <Text style={[styles.label, isFocused && styles.labelActive]}>{label}</Text>
             </Pressable>

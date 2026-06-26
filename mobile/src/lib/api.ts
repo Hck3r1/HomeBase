@@ -11,7 +11,6 @@ import { getApiBaseUrl } from './apiConfig';
 export { bareApi } from './bareApi';
 
 export const api = axios.create({
-  baseURL: getApiBaseUrl(),
   timeout: 15000,
 });
 
@@ -51,6 +50,7 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 api.interceptors.request.use((config) => {
+  config.baseURL = getApiBaseUrl();
   const token = getAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

@@ -10,29 +10,31 @@ import {
   updateListing,
   updateListingStatus,
 } from '../api/listings';
+import type { ListingType } from '../types/listing';
 
 export const listingKeys = {
   all: ['listings'] as const,
   list: (filters: ListingFilters) => ['listings', 'list', filters] as const,
-  nearby: (args: { lat: number; lng: number; radius?: number }) =>
+  nearby: (args: { lat: number; lng: number; radius?: number; type?: ListingType }) =>
     ['listings', 'nearby', args] as const,
   detail: (id: string) => ['listings', 'detail', id] as const,
   mine: ['listings', 'mine'] as const,
 };
 
-export function useListings(filters: ListingFilters) {
+export function useListings(filters: ListingFilters, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: listingKeys.list(filters),
     queryFn: () => fetchListings(filters),
+    enabled: options?.enabled ?? true,
   });
 }
 
 export function useNearbyListings(
-  args: { lat: number; lng: number; radius?: number } | null,
+  args: { lat: number; lng: number; radius?: number; type?: ListingType } | null,
 ) {
   return useQuery({
     queryKey: listingKeys.nearby(args ?? { lat: 0, lng: 0 }),
-    queryFn: () => fetchNearby(args as { lat: number; lng: number; radius?: number }),
+    queryFn: () => fetchNearby(args!),
     enabled: args != null,
   });
 }

@@ -28,7 +28,9 @@ export async function register(name: string, email: string, password: string) {
   });
   try {
     await sendVerificationEmail(user.email, user.name, verifyToken);
-  } catch {
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    console.error('Verification email failed:', detail);
     await prisma.user.delete({ where: { id: user.id } });
     throw new ApiError(503, 'Could not send verification email. Check mail configuration and try again.');
   }

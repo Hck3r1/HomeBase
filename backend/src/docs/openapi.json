@@ -2,14 +2,15 @@
   "openapi": "3.0.3",
   "info": {
     "title": "HomeBase API",
-    "description": "Authentication and user profile endpoints for the HomeBase mobile app.",
+    "description": "Authentication, user profile, catalog reference data, and listings discovery endpoints for the HomeBase mobile app.",
     "version": "1.0.0"
   },
   "servers": [{ "url": "http://localhost:4000", "description": "Local development" }],
   "tags": [
     { "name": "Auth", "description": "Registration, login, tokens, and password reset" },
     { "name": "Users", "description": "Authenticated user profile and settings" },
-    { "name": "Catalog", "description": "Reference data for onboarding and filters" }
+    { "name": "Catalog", "description": "Reference data for onboarding and filters" },
+    { "name": "Listings", "description": "Listing CRUD, search, nearby discovery, and photo uploads" }
   ],
   "components": {
     "securitySchemes": {
@@ -221,6 +222,178 @@
         "properties": {
           "token": { "type": "string", "example": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]" },
           "platform": { "type": "string", "enum": ["ios", "android"], "example": "ios" }
+        }
+      },
+      "ListingPhoto": {
+        "type": "object",
+        "required": ["id", "cloudinaryPublicId", "url", "position"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "cloudinaryPublicId": { "type": "string", "example": "listings/abc123/photo1" },
+          "url": { "type": "string", "format": "uri", "example": "https://res.cloudinary.com/demo/image/upload/v1/listings/abc123/photo1.jpg" },
+          "position": { "type": "integer", "example": 0 }
+        }
+      },
+      "RentDetails": {
+        "type": "object",
+        "properties": {
+          "monthlyRent": { "type": "integer", "nullable": true, "description": "Amount in kobo", "example": 85000000 },
+          "annualRent": { "type": "integer", "nullable": true, "description": "Amount in kobo", "example": 960000000 },
+          "securityDeposit": { "type": "integer", "example": 85000000 },
+          "leaseTermMonths": { "type": "integer", "example": 12 },
+          "availableFrom": { "type": "string", "nullable": true, "format": "date-time" }
+        }
+      },
+      "SaleDetails": {
+        "type": "object",
+        "required": ["salePrice"],
+        "properties": {
+          "salePrice": { "type": "integer", "description": "Amount in kobo", "example": 4500000000 },
+          "negotiable": { "type": "boolean", "example": true },
+          "titleDocsVerified": { "type": "boolean", "example": false }
+        }
+      },
+      "ShortstayDetails": {
+        "type": "object",
+        "required": ["nightlyRate"],
+        "properties": {
+          "nightlyRate": { "type": "integer", "description": "Amount in kobo", "example": 6500000 },
+          "cleaningFee": { "type": "integer", "example": 1500000 },
+          "minNights": { "type": "integer", "example": 1 },
+          "maxNights": { "type": "integer", "example": 30 },
+          "maxGuests": { "type": "integer", "example": 4 },
+          "houseRules": { "type": "string", "nullable": true }
+        }
+      },
+      "Listing": {
+        "type": "object",
+        "required": ["id", "ownerId", "listingType", "status", "title", "description", "propertyType", "bedrooms", "bathrooms", "address", "city", "state", "lat", "lng", "photos", "createdAt", "updatedAt"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "ownerId": { "type": "string", "format": "uuid" },
+          "listingType": { "type": "string", "enum": ["rent", "sale", "shortstay"] },
+          "status": { "type": "string", "enum": ["draft", "active", "paused", "rented", "sold"] },
+          "title": { "type": "string", "example": "3-bed flat in Lekki Phase 1" },
+          "description": { "type": "string" },
+          "propertyType": { "type": "string", "example": "apartment" },
+          "bedrooms": { "type": "integer", "example": 3 },
+          "bathrooms": { "type": "integer", "example": 2 },
+          "areaSqm": { "type": "integer", "nullable": true, "example": 120 },
+          "amenities": { "type": "array", "items": { "type": "string" }, "example": ["parking", "generator"] },
+          "address": { "type": "string", "example": "12 Admiralty Way" },
+          "city": { "type": "string", "example": "Lagos" },
+          "state": { "type": "string", "example": "Lagos" },
+          "lat": { "type": "number", "example": 6.4474 },
+          "lng": { "type": "number", "example": 3.4700 },
+          "photos": { "type": "array", "items": { "$ref": "#/components/schemas/ListingPhoto" } },
+          "rent": { "$ref": "#/components/schemas/RentDetails", "nullable": true },
+          "sale": { "$ref": "#/components/schemas/SaleDetails", "nullable": true },
+          "shortstay": { "$ref": "#/components/schemas/ShortstayDetails", "nullable": true },
+          "owner": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "avatarUrl": { "type": "string", "nullable": true },
+              "listerType": { "type": "string", "nullable": true, "enum": ["agent", "landlord", null] }
+            }
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "NearbyListing": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Listing" },
+          {
+            "type": "object",
+            "required": ["distanceMeters"],
+            "properties": {
+              "distanceMeters": { "type": "integer", "example": 1240, "description": "Distance from query point in meters" }
+            }
+          }
+        ]
+      },
+      "PaginatedListings": {
+        "type": "object",
+        "required": ["data", "total", "page", "pageSize"],
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Listing" } },
+          "total": { "type": "integer", "example": 42 },
+          "page": { "type": "integer", "example": 1 },
+          "pageSize": { "type": "integer", "example": 20 }
+        }
+      },
+      "NearbyListingsResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/NearbyListing" } }
+        }
+      },
+      "MyListingsResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Listing" } }
+        }
+      },
+      "UpdateListingStatusRequest": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": { "type": "string", "enum": ["draft", "active", "paused", "rented", "sold"], "example": "active" }
+        }
+      },
+      "UpdateListingRequest": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "minLength": 3 },
+          "description": { "type": "string", "minLength": 10 },
+          "amenities": { "type": "array", "items": { "type": "string" } },
+          "bedrooms": { "type": "integer", "minimum": 0 },
+          "bathrooms": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "AddListingPhotoRequest": {
+        "type": "object",
+        "required": ["cloudinaryPublicId", "url"],
+        "properties": {
+          "cloudinaryPublicId": { "type": "string", "example": "listings/abc123/photo1" },
+          "url": { "type": "string", "format": "uri" },
+          "position": { "type": "integer", "example": 0 }
+        }
+      },
+      "PhotoSignResponse": {
+        "type": "object",
+        "required": ["timestamp", "folder", "signature", "apiKey", "cloudName"],
+        "properties": {
+          "timestamp": { "type": "integer", "example": 1710000000 },
+          "folder": { "type": "string", "example": "listings/abc123" },
+          "signature": { "type": "string" },
+          "apiKey": { "type": "string" },
+          "cloudName": { "type": "string" }
+        }
+      },
+      "CreateRentListingRequest": {
+        "type": "object",
+        "required": ["listingType", "title", "description", "propertyType", "bedrooms", "bathrooms", "address", "city", "state", "lat", "lng", "rent"],
+        "properties": {
+          "listingType": { "type": "string", "enum": ["rent"] },
+          "title": { "type": "string", "minLength": 3 },
+          "description": { "type": "string", "minLength": 10 },
+          "propertyType": { "type": "string" },
+          "bedrooms": { "type": "integer", "minimum": 0 },
+          "bathrooms": { "type": "integer", "minimum": 0 },
+          "areaSqm": { "type": "integer" },
+          "amenities": { "type": "array", "items": { "type": "string" } },
+          "address": { "type": "string" },
+          "city": { "type": "string" },
+          "state": { "type": "string" },
+          "lat": { "type": "number" },
+          "lng": { "type": "number" },
+          "rent": { "$ref": "#/components/schemas/RentDetails" }
         }
       }
     }
@@ -732,6 +905,212 @@
               }
             }
           }
+        }
+      }
+    },
+    "/api/v1/listings": {
+      "get": {
+        "tags": ["Listings"],
+        "summary": "Search listings",
+        "description": "Faceted search over active listings. Money filters apply to type-specific price fields (kobo).",
+        "parameters": [
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["rent", "sale", "shortstay"] } },
+          { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Title or city text search" },
+          { "name": "minPrice", "in": "query", "schema": { "type": "integer" } },
+          { "name": "maxPrice", "in": "query", "schema": { "type": "integer" } },
+          { "name": "bedrooms", "in": "query", "schema": { "type": "integer" } },
+          { "name": "bathrooms", "in": "query", "schema": { "type": "integer" } },
+          { "name": "propertyType", "in": "query", "schema": { "type": "string" } },
+          { "name": "amenities", "in": "query", "schema": { "type": "string" }, "description": "Comma-separated amenity slugs" },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["recent", "priceAsc", "priceDesc"], "default": "recent" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "maximum": 50, "default": 20 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated listings",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedListings" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Listings"],
+        "summary": "Create listing",
+        "description": "Create a rent, sale, or short-stay listing. Requires lister role. Body is discriminated by `listingType`.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateRentListingRequest" },
+              "examples": {
+                "rent": {
+                  "summary": "Rental listing",
+                  "value": {
+                    "listingType": "rent",
+                    "title": "3-bed flat in Lekki Phase 1",
+                    "description": "Spacious flat with parking and 24/7 power.",
+                    "propertyType": "apartment",
+                    "bedrooms": 3,
+                    "bathrooms": 2,
+                    "amenities": ["parking", "generator"],
+                    "address": "12 Admiralty Way",
+                    "city": "Lagos",
+                    "state": "Lagos",
+                    "lat": 6.4474,
+                    "lng": 3.47,
+                    "rent": { "monthlyRent": 85000000, "securityDeposit": 85000000, "leaseTermMonths": 12 }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Listing created",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Listing" } } }
+          },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "403": { "description": "Seeker account — lister role required", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/v1/listings/nearby": {
+      "get": {
+        "tags": ["Listings"],
+        "summary": "Nearby listings",
+        "description": "PostGIS proximity search. Returns active listings within `radius` meters of the given point, ordered by distance.",
+        "parameters": [
+          { "name": "lat", "in": "query", "required": true, "schema": { "type": "number" }, "example": 6.5244 },
+          { "name": "lng", "in": "query", "required": true, "schema": { "type": "number" }, "example": 3.3792 },
+          { "name": "radius", "in": "query", "schema": { "type": "integer", "default": 5000 }, "description": "Search radius in meters" },
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["rent", "sale", "shortstay"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Nearby listings with distanceMeters",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NearbyListingsResponse" } } }
+          },
+          "400": { "description": "Invalid query", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/v1/listings/{id}": {
+      "get": {
+        "tags": ["Listings"],
+        "summary": "Get listing",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "200": { "description": "Listing detail", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Listing" } } } },
+          "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      },
+      "patch": {
+        "tags": ["Listings"],
+        "summary": "Update listing",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateListingRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "Updated listing", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Listing" } } } },
+          "403": { "description": "Not the listing owner", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["Listings"],
+        "summary": "Delete listing",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "204": { "description": "Deleted" },
+          "403": { "description": "Not the listing owner", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/v1/listings/{id}/status": {
+      "patch": {
+        "tags": ["Listings"],
+        "summary": "Update listing status",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateListingStatusRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "Updated listing", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Listing" } } } },
+          "403": { "description": "Not the listing owner", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/v1/listings/{id}/photos/sign": {
+      "post": {
+        "tags": ["Listings"],
+        "summary": "Sign Cloudinary upload",
+        "description": "Returns signed upload params for direct client upload to Cloudinary.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "200": { "description": "Upload signature", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PhotoSignResponse" } } } },
+          "403": { "description": "Not the listing owner", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/v1/listings/{id}/photos": {
+      "post": {
+        "tags": ["Listings"],
+        "summary": "Attach uploaded photo",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddListingPhotoRequest" } } }
+        },
+        "responses": {
+          "201": { "description": "Photo attached", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ListingPhoto" } } } },
+          "403": { "description": "Not the listing owner", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/v1/listings/{id}/photos/{photoId}": {
+      "delete": {
+        "tags": ["Listings"],
+        "summary": "Remove photo",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "photoId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "204": { "description": "Photo removed" },
+          "403": { "description": "Not the listing owner", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/v1/me/listings": {
+      "get": {
+        "tags": ["Listings"],
+        "summary": "My listings",
+        "description": "All listings owned by the authenticated lister.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Owner listings", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MyListingsResponse" } } } },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "403": { "description": "Lister role required", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
         }
       }
     }

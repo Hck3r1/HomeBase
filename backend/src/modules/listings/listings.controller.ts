@@ -44,5 +44,10 @@ export const addPhoto = (req: Request, res: Response, next: NextFunction) =>
 export const removePhoto = (req: Request, res: Response, next: NextFunction) =>
   service.removePhoto(req.params.id, req.params.photoId, req.user!.id).then(() => res.status(204).send()).catch(next);
 
-export const uploadSignature = (req: Request, res: Response) =>
-  res.json(signUploadParams(`listings/${req.params.id}`));
+export const uploadSignature = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json(signUploadParams(`listings/${req.params.id}`));
+  } catch {
+    next(new ApiError(503, 'Photo upload is not configured on the server.'));
+  }
+};

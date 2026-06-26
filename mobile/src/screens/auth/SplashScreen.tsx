@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeBaseMark } from '../../components/HomeBaseMark';
+import { onboardingColors } from '../../lib/onboardingColors';
 import { theme } from '../../theme';
 import { useAuthStore } from '../../store/authStore';
 import type { AuthStackParamList } from '../../navigation/AuthStack';
@@ -29,7 +30,7 @@ export function SplashScreen({ navigation }: Props) {
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
-      <HomeBaseMark />
+      <HomeBaseMark size={72} color={onboardingColors.sage} />
       <Text style={styles.name}>HomeBase</Text>
       <Text style={styles.tag}>Rent · Buy · Stay</Text>
     </View>
@@ -39,7 +40,7 @@ export function SplashScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: onboardingColors.bg,
     alignItems: 'center',
     justifyContent: 'center',
   },

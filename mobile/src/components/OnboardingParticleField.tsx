@@ -4,12 +4,15 @@ import Svg, { Circle, Line } from 'react-native-svg';
 import { onboardingColors } from '../lib/onboardingColors';
 import { buildShapePoints, type ParticleShapeType } from '../lib/onboardingParticleShapes';
 
-const COUNT = 64;
+const COUNT = 56;
 const CYCLE = 7000;
 const FORM_START = 0.15;
 const FORM_END = 0.55;
 const HOLD_END = 0.78;
 const DISSOLVE_END = 1.0;
+const FRAME_MS = 33;
+const MAX_LINES = 96;
+const LINK_DIST = 64;
 
 interface Particle {
   x: number;
@@ -23,6 +26,20 @@ interface Particle {
   isAccent: boolean;
   drawX: number;
   drawY: number;
+}
+
+interface LineSegment {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  opacity: number;
+}
+
+interface RenderSnapshot {
+  lines: LineSegment[];
+  particles: Array<Pick<Particle, 'drawX' | 'drawY' | 'r' | 'phase' | 'isAccent'>>;
+  convergence: number;
 }
 
 interface Props {
@@ -40,6 +57,13 @@ function rgba([r, g, b]: readonly [number, number, number], alpha: number): stri
   const a = Math.max(0, Math.min(1, alpha));
   if (a < MIN_ALPHA) return null;
   return `rgba(${r},${g},${b},${a.toFixed(3)})`;
+}
+
+function convergenceAt(cycleT: number): number {
+  if (cycleT < FORM_START) return 0;
+  if (cycleT < FORM_END) return easeInOutCubic((cycleT - FORM_START) / (FORM_END - FORM_START));
+  if (cycleT < HOLD_END) return 1;
+  return 1 - easeInOutCubic((cycleT - HOLD_END) / (DISSOLVE_END - HOLD_END));
 }
 
 function createParticles(w: number, h: number, shapeType: ParticleShapeType): Particle[] {
@@ -67,80 +91,12 @@ function createParticles(w: number, h: number, shapeType: ParticleShapeType): Pa
   return particles;
 }
 
-export function OnboardingParticleField({ shapeType, active = true }: Props) {
-  const { width, height } = useWindowDimensions();
-  const particlesRef = useRef<Particle[]>(createParticles(width, height, shapeType));
-  const startTimeRef = useRef(Date.now() - Math.random() * CYCLE);
-  const [frame, setFrame] = useState(0);
-  const shapeRef = useRef(shapeType);
+function buildLines(particles: Particle[], convergence: number): LineSegment[] {
+  if (convergence < 0.05) return [];
 
-  useEffect(() => {
-    if (shapeRef.current !== shapeType) {
-      shapeRef.current = shapeType;
-      particlesRef.current = createParticles(width, height, shapeType);
-      startTimeRef.current = Date.now() - Math.random() * CYCLE;
-    }
-  }, [shapeType, width, height]);
-
-  useEffect(() => {
-    if (!active) return;
-
-    let raf = 0;
-    const step = () => {
-      const now = Date.now();
-      const elapsed = (now - startTimeRef.current) % CYCLE;
-      const cycleT = elapsed / CYCLE;
-
-      let convergence = 0;
-      if (cycleT < FORM_START) {
-        convergence = 0;
-      } else if (cycleT < FORM_END) {
-        convergence = easeInOutCubic((cycleT - FORM_START) / (FORM_END - FORM_START));
-      } else if (cycleT < HOLD_END) {
-        convergence = 1;
-      } else {
-        convergence = 1 - easeInOutCubic((cycleT - HOLD_END) / (DISSOLVE_END - HOLD_END));
-      }
-
-      const particles = particlesRef.current;
-      const linkDist = 64;
-
-      for (const p of particles) {
-        p.x += p.vx * (1 - convergence * 0.8);
-        p.y += p.vy * (1 - convergence * 0.8);
-        p.phase += 0.02;
-
-        if (p.x < -10) p.x = width + 10;
-        if (p.x > width + 10) p.x = -10;
-        if (p.y < -10) p.y = height + 10;
-        if (p.y > height + 10) p.y = -10;
-
-        p.drawX = p.x + (p.tx - p.x) * convergence;
-        p.drawY = p.y + (p.ty - p.y) * convergence;
-      }
-
-      setFrame((f) => (f + 1) % 100000);
-      raf = requestAnimationFrame(step);
-    };
-
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [active, width, height]);
-
-  const particles = particlesRef.current;
-  const linkDist = 64;
-  const lines: { x1: number; y1: number; x2: number; y2: number; opacity: number }[] = [];
-
-  let convergence = 0;
-  const elapsed = (Date.now() - startTimeRef.current) % CYCLE;
-  const cycleT = elapsed / CYCLE;
-  if (cycleT >= FORM_START && cycleT < FORM_END) {
-    convergence = easeInOutCubic((cycleT - FORM_START) / (FORM_END - FORM_START));
-  } else if (cycleT >= FORM_END && cycleT < HOLD_END) {
-    convergence = 1;
-  } else if (cycleT >= HOLD_END) {
-    convergence = 1 - easeInOutCubic((cycleT - HOLD_END) / (DISSOLVE_END - HOLD_END));
-  }
+  const lines: LineSegment[] = [];
+  const maxD = convergence > 0.3 ? LINK_DIST * 1.4 : LINK_DIST;
+  const candidates: LineSegment[] = [];
 
   for (let i = 0; i < particles.length; i++) {
     for (let j = i + 1; j < particles.length; j++) {
@@ -148,19 +104,101 @@ export function OnboardingParticleField({ shapeType, active = true }: Props) {
       const b = particles[j];
       const dx = a.drawX - b.drawX;
       const dy = a.drawY - b.drawY;
-      const d = Math.sqrt(dx * dx + dy * dy);
-      const maxD = convergence > 0.3 ? linkDist * 1.4 : linkDist;
+      const d = Math.hypot(dx, dy);
       if (d < maxD) {
-        const opacity = (1 - d / maxD) * (0.1 + convergence * 0.22);
-        lines.push({ x1: a.drawX, y1: a.drawY, x2: b.drawX, y2: b.drawY, opacity });
+        candidates.push({
+          x1: a.drawX,
+          y1: a.drawY,
+          x2: b.drawX,
+          y2: b.drawY,
+          opacity: (1 - d / maxD) * (0.1 + convergence * 0.22),
+        });
       }
     }
   }
 
-  void frame;
+  candidates.sort((a, b) => b.opacity - a.opacity);
+  return candidates.slice(0, MAX_LINES);
+}
+
+function buildSnapshot(
+  particles: Particle[],
+  convergence: number,
+): RenderSnapshot {
+  return {
+    lines: buildLines(particles, convergence),
+    particles: particles.map((p) => ({
+      drawX: p.drawX,
+      drawY: p.drawY,
+      r: p.r,
+      phase: p.phase,
+      isAccent: p.isAccent,
+    })),
+    convergence,
+  };
+}
+
+export function OnboardingParticleField({ shapeType, active = true }: Props) {
+  const { width, height } = useWindowDimensions();
+  const particlesRef = useRef<Particle[]>([]);
+  const startTimeRef = useRef(Date.now() - Math.random() * CYCLE);
+  const lastFrameRef = useRef(0);
+  const shapeRef = useRef(shapeType);
+  const [snapshot, setSnapshot] = useState<RenderSnapshot>({ lines: [], particles: [], convergence: 0 });
+
+  useEffect(() => {
+    if (width <= 0 || height <= 0) return;
+    if (shapeRef.current === shapeType && particlesRef.current.length > 0) return;
+
+    shapeRef.current = shapeType;
+    particlesRef.current = createParticles(width, height, shapeType);
+    startTimeRef.current = Date.now() - Math.random() * CYCLE;
+    lastFrameRef.current = 0;
+    setSnapshot(buildSnapshot(particlesRef.current, 0));
+  }, [shapeType, width, height]);
+
+  useEffect(() => {
+    if (!active || width <= 0 || height <= 0) return;
+
+    let raf = 0;
+
+    const step = () => {
+      const now = Date.now();
+      if (now - lastFrameRef.current >= FRAME_MS) {
+        lastFrameRef.current = now;
+
+        const elapsed = (now - startTimeRef.current) % CYCLE;
+        const cycleT = elapsed / CYCLE;
+        const convergence = convergenceAt(cycleT);
+        const particles = particlesRef.current;
+
+        for (const p of particles) {
+          p.x += p.vx * (1 - convergence * 0.8);
+          p.y += p.vy * (1 - convergence * 0.8);
+          p.phase += 0.02;
+
+          if (p.x < -10) p.x = width + 10;
+          if (p.x > width + 10) p.x = -10;
+          if (p.y < -10) p.y = height + 10;
+          if (p.y > height + 10) p.y = -10;
+
+          p.drawX = p.x + (p.tx - p.x) * convergence;
+          p.drawY = p.y + (p.ty - p.y) * convergence;
+        }
+
+        setSnapshot(buildSnapshot(particles, convergence));
+      }
+
+      raf = requestAnimationFrame(step);
+    };
+
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [active, width, height]);
 
   const sageRgb = onboardingColors.sageRgb;
   const accentRgb = onboardingColors.accentRgb;
+  const { lines, particles, convergence } = snapshot;
 
   return (
     <View style={[StyleSheet.absoluteFill, styles.root]} pointerEvents="none">
@@ -186,14 +224,8 @@ export function OnboardingParticleField({ shapeType, active = true }: Props) {
           const alpha = (0.35 + convergence * 0.5) * flicker;
           const radius = p.r + convergence * 0.6;
           const fill = rgba(rgb, alpha);
-          const glow = convergence > 0.5 ? rgba(rgb, alpha * 0.08) : null;
           if (!fill) return null;
-          return (
-            <React.Fragment key={`p-${idx}`}>
-              {glow ? <Circle cx={p.drawX} cy={p.drawY} r={radius * 2.4} fill={glow} /> : null}
-              <Circle cx={p.drawX} cy={p.drawY} r={radius} fill={fill} />
-            </React.Fragment>
-          );
+          return <Circle key={`p-${idx}`} cx={p.drawX} cy={p.drawY} r={radius} fill={fill} />;
         })}
       </Svg>
     </View>

@@ -35,6 +35,6 @@ async function ensureListingGeo() {
 export async function resetDb() {
   await ensureListingGeo();
   await prisma.$executeRawUnsafe(
-    'TRUNCATE TABLE "ListingPhoto","ListingRentDetails","ListingSaleDetails","ListingShortstayDetails","Listing","PushToken","AuthProvider","UserPreference","User" RESTART IDENTITY CASCADE',
+    'TRUNCATE TABLE "Review","KycVerification","Message","ConversationParticipant","Conversation","Favorite","ListingPhoto","ListingRentDetails","ListingSaleDetails","ListingShortstayDetails","Listing","PushToken","AuthProvider","UserPreference","User" RESTART IDENTITY CASCADE',
   );
 }

@@ -73,9 +73,16 @@ export async function fetchNearby(args: {
   lat: number;
   lng: number;
   radius?: number;
+  type?: ListingType;
 }): Promise<NearbyListing[]> {
-  const { data } = await api.get<{ data: NearbyListing[] }>('/listings/nearby', { params: args });
-  return data.data;
+  const { data } = await api.get<{ data: Array<ApiListing & { distanceMeters: number }> }>(
+    '/listings/nearby',
+    { params: args },
+  );
+  return data.data.map((raw) => ({
+    ...normalizeListing(raw),
+    distanceMeters: raw.distanceMeters,
+  }));
 }
 
 export async function fetchListing(id: string): Promise<Listing> {

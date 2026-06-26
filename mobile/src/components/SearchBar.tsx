@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   wrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.input,
     borderRadius: theme.radii.lg,
     borderWidth: 1,
     borderColor: theme.colors.line,

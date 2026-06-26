@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/Button';
 import { TabHeroHeader } from '../../components/TabHeroHeader';
 import { useAuthStore } from '../../store/authStore';
+import { navigateHomeStack } from '../../navigation/homeStackNavigation';
 import { theme } from '../../theme';
 
 export function ProfileScreen() {
@@ -73,16 +74,16 @@ export function ProfileScreen() {
           />
         ) : null}
         <MenuRow
-          icon="settings-outline"
-          label="Account settings"
-          hint="Email, password, security"
-          onPress={() => Alert.alert('Coming soon')}
+          icon="chatbubbles-outline"
+          label="Messages"
+          hint="Conversations about listings"
+          onPress={() => navigateHomeStack(navigation, 'Conversations')}
         />
         <MenuRow
           icon="notifications-outline"
           label="Notifications"
           hint="Alerts and updates"
-          onPress={() => Alert.alert('Coming soon')}
+          onPress={() => navigateHomeStack(navigation, 'Notifications')}
         />
         <MenuRow
           icon="help-circle-outline"

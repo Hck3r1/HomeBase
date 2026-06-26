@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
+import { FlatList } from 'react-native';
 import { WalkthroughScreen } from '../src/screens/auth/WalkthroughScreen';
 
 jest.mock('react-native-safe-area-context', () => ({
@@ -27,6 +28,14 @@ jest.mock('../src/lib/onboardingStorage', () => ({
 import { onboardingStorage } from '../src/lib/onboardingStorage';
 
 const navigation = { replace: jest.fn(), navigate: jest.fn() };
+const PAGE_WIDTH = 390;
+
+function scrollToSlide(screen: ReturnType<typeof render>, slideIndex: number) {
+  const list = screen.UNSAFE_getByType(FlatList);
+  const offset = { x: PAGE_WIDTH * slideIndex, y: 0 };
+  fireEvent.scroll(list, { nativeEvent: { contentOffset: offset } });
+  fireEvent(list, 'onMomentumScrollEnd', { nativeEvent: { contentOffset: offset } });
+}
 
 describe('WalkthroughScreen', () => {
   beforeEach(() => {
@@ -35,20 +44,21 @@ describe('WalkthroughScreen', () => {
   });
 
   it('renders the first slide with continue action', () => {
-    const { getByText } = render(
+    const { getByText, getByTestId } = render(
       <WalkthroughScreen navigation={navigation as any} route={{ key: 'Walkthrough', name: 'Walkthrough' }} />,
     );
     expect(getByText('Browse listings')).toBeTruthy();
-    expect(getByText('Continue')).toBeTruthy();
+    expect(getByTestId('walkthrough-continue-0')).toBeTruthy();
     expect(getByText('Discover')).toBeTruthy();
   });
 
   it('advances to the next slide when continue is pressed', () => {
-    const { getByText } = render(
+    const screen = render(
       <WalkthroughScreen navigation={navigation as any} route={{ key: 'Walkthrough', name: 'Walkthrough' }} />,
     );
-    fireEvent.press(getByText('Continue'));
-    expect(getByText('Verified agents')).toBeTruthy();
+    fireEvent.press(screen.getByTestId('walkthrough-continue-0'));
+    scrollToSlide(screen, 1);
+    expect(screen.getByText('Verified agents')).toBeTruthy();
   });
 
   it('skips to login and marks onboarding seen', () => {
@@ -61,12 +71,14 @@ describe('WalkthroughScreen', () => {
   });
 
   it('finishes onboarding from the last slide', () => {
-    const { getByText } = render(
+    const screen = render(
       <WalkthroughScreen navigation={navigation as any} route={{ key: 'Walkthrough', name: 'Walkthrough' }} />,
     );
-    fireEvent.press(getByText('Continue'));
-    fireEvent.press(getByText('Continue'));
-    fireEvent.press(getByText('Get started'));
+    fireEvent.press(screen.getByTestId('walkthrough-continue-0'));
+    scrollToSlide(screen, 1);
+    fireEvent.press(screen.getByTestId('walkthrough-continue-1'));
+    scrollToSlide(screen, 2);
+    fireEvent.press(screen.getByTestId('walkthrough-continue-2'));
     expect(onboardingStorage.markOnboardingSeen).toHaveBeenCalled();
     expect(navigation.replace).toHaveBeenCalledWith('SignUp');
   });

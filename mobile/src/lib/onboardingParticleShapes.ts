@@ -31,32 +31,37 @@ export function buildShapePoints(type: ParticleShapeType, w: number, h: number, 
   const cy = h * 0.4;
 
   if (type === 'house') {
-    const scale = w * 0.4;
-    const baseY = cy + scale * 0.52;
-    const wallTopY = cy - scale * 0.05;
-    const roofPeakY = cy - scale * 0.62;
-    const leftX = cx - scale * 0.5;
-    const rightX = cx + scale * 0.5;
+    const scale = w * 0.36;
+    const cx = w / 2;
+    const topY = h * 0.4 - scale * 0.55;
     const roofLeftX = cx - scale * 0.62;
     const roofRightX = cx + scale * 0.62;
-    const doorW = scale * 0.22;
-    const doorH = scale * 0.42;
-    const doorLX = cx - doorW / 2;
-    const doorRX = cx + doorW / 2;
-    const doorTopY = baseY - doorH;
+    const roofPeakY = topY;
+    const roofBaseY = topY + scale * 0.42;
+    const bar1Y = roofBaseY + scale * 0.18;
+    const bar2Y = bar1Y + scale * 0.22;
+    const bar3Y = bar2Y + scale * 0.22;
+    const bar1W = scale * 1.15;
+    const bar2W = scale * 0.85;
+    const bar3W = scale * 0.55;
+    const barH = scale * 0.1;
 
     return sampleEdges(
       [
-        [leftX, wallTopY, leftX, baseY],
-        [leftX, baseY, doorLX, baseY],
-        [doorLX, baseY, doorLX, doorTopY],
-        [doorLX, doorTopY, doorRX, doorTopY],
-        [doorRX, doorTopY, doorRX, baseY],
-        [doorRX, baseY, rightX, baseY],
-        [rightX, baseY, rightX, wallTopY],
-        [roofLeftX, wallTopY, cx, roofPeakY],
-        [cx, roofPeakY, roofRightX, wallTopY],
-        [roofLeftX, wallTopY, roofRightX, wallTopY],
+        [roofLeftX, roofBaseY, cx, roofPeakY],
+        [cx, roofPeakY, roofRightX, roofBaseY],
+        [cx - bar1W / 2, bar1Y, cx + bar1W / 2, bar1Y],
+        [cx + bar1W / 2, bar1Y, cx + bar1W / 2, bar1Y + barH],
+        [cx + bar1W / 2, bar1Y + barH, cx - bar1W / 2, bar1Y + barH],
+        [cx - bar1W / 2, bar1Y + barH, cx - bar1W / 2, bar1Y],
+        [cx - bar2W / 2, bar2Y, cx + bar2W / 2, bar2Y],
+        [cx + bar2W / 2, bar2Y, cx + bar2W / 2, bar2Y + barH],
+        [cx + bar2W / 2, bar2Y + barH, cx - bar2W / 2, bar2Y + barH],
+        [cx - bar2W / 2, bar2Y + barH, cx - bar2W / 2, bar2Y],
+        [cx - bar3W / 2, bar3Y, cx + bar3W / 2, bar3Y],
+        [cx + bar3W / 2, bar3Y, cx + bar3W / 2, bar3Y + barH],
+        [cx + bar3W / 2, bar3Y + barH, cx - bar3W / 2, bar3Y + barH],
+        [cx - bar3W / 2, bar3Y + barH, cx - bar3W / 2, bar3Y],
       ],
       count,
     );

@@ -12,6 +12,7 @@ import {
   saveStoredUser,
 } from '../lib/authSession';
 import { getApiBaseUrl } from '../lib/apiConfig';
+import { disconnectSocket } from '../lib/socket';
 
 export type ListingInterest = 'rent' | 'sale' | 'shortstay';
 export type Gender = 'male' | 'female' | 'prefer_not_to_say';
@@ -95,6 +96,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     }
     await onboardingStorage.setShowAfterLogout();
+    disconnectSocket();
     set({
       accessToken: null,
       refreshToken: null,

@@ -211,10 +211,11 @@ export function PreferencesSetupScreen({ navigation }: Props) {
 
       {isLister && (
         <View style={styles.kycCard}>
-          <Text style={styles.kycTitle}>Identity verification required for payouts</Text>
+          <Text style={styles.kycTitle}>Identity verification required to list</Text>
           <Text style={styles.kycBody}>
-            Listers must complete KYC with a government ID and BVN before receiving payouts. You can
-            verify on the next screen or skip and finish later from Settings.
+            Agents and landlords must complete KYC with a government ID and BVN before publishing
+            listings and receiving payouts. Verification will be enforced once Dojah is live — you can
+            start on the next screen or finish later from Settings.
           </Text>
         </View>
       )}

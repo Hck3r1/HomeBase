@@ -6,7 +6,10 @@ export type HomeStackScreen =
   | 'MapView'
   | 'ListingDetail'
   | 'SearchFilters'
-  | 'PhotoGallery';
+  | 'PhotoGallery'
+  | 'Conversations'
+  | 'Notifications'
+  | 'Chat';
 
 /** Navigate to a screen inside the Home tab's ListingsStack from any tab. */
 export function navigateHomeStack(

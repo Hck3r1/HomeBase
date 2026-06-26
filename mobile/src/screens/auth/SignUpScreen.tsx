@@ -69,30 +69,32 @@ export function SignUpScreen({ navigation }: Props) {
         }
       >
         <View style={styles.field}>
-          <FieldLabel>Name</FieldLabel>
-          <InputGroup>
-            <View style={styles.nameRow}>
-              <View style={styles.nameCell}>
+          <View style={styles.nameRow}>
+            <View style={styles.nameCol}>
+              <FieldLabel>First name</FieldLabel>
+              <InputGroup>
                 <AppTextInput
-                  placeholder="First Name"
+                  placeholder="First name"
                   value={firstName}
                   onChangeText={setFirstName}
                   autoComplete="given-name"
                   editable={!loading}
                 />
-              </View>
-              <View style={styles.nameDivider} />
-              <View style={styles.nameCell}>
+              </InputGroup>
+            </View>
+            <View style={styles.nameCol}>
+              <FieldLabel>Last name</FieldLabel>
+              <InputGroup>
                 <AppTextInput
-                  placeholder="Last Name"
+                  placeholder="Last name"
                   value={lastName}
                   onChangeText={setLastName}
                   autoComplete="family-name"
                   editable={!loading}
                 />
-              </View>
+              </InputGroup>
             </View>
-          </InputGroup>
+          </View>
         </View>
 
         <View style={styles.field}>
@@ -145,7 +147,12 @@ const styles = StyleSheet.create({
   subtitle: { color: theme.colors.muted, fontSize: theme.font.sizeSm, textAlign: 'center', lineHeight: 20 },
   link: { color: theme.colors.primary, fontWeight: theme.font.weightBold },
   field: { marginBottom: theme.spacing(2) },
-  nameRow: { flexDirection: 'row', alignItems: 'stretch' },
-  nameCell: { flex: 1 },
-  nameDivider: { width: 1, backgroundColor: theme.colors.line },
+  nameRow: {
+    flexDirection: 'row',
+    gap: theme.spacing(1.5),
+  },
+  nameCol: {
+    flex: 1,
+    minWidth: 0,
+  },
 });

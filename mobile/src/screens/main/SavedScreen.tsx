@@ -5,26 +5,22 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ListingCard } from '../../components/ListingCard';
 import { TabHeroHeader } from '../../components/TabHeroHeader';
 import { EmptyState } from '../../components/EmptyState';
+import { favoriteListingToListing, useFavorites } from '../../api/favorites';
 import { theme } from '../../theme';
-import { useSavedStore } from '../../store/savedStore';
-import { useSavedListings } from '../../hooks/listings';
 import { navigateHomeStack } from '../../navigation/homeStackNavigation';
 
 export function SavedScreen() {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const ids = useSavedStore((s) => s.ids);
-  const hydrated = useSavedStore((s) => s.hydrated);
-  const queries = useSavedListings(ids);
+  const { data, isLoading } = useFavorites();
 
   const listings = useMemo(
     () =>
-      queries
-        .map((q) => q.data)
-        .filter((l): l is NonNullable<typeof l> => l != null),
-    [queries],
+      (data ?? [])
+        .filter((f) => f.listing.title)
+        .map((f) => favoriteListingToListing(f.listing)),
+    [data],
   );
-  const isLoading = !hydrated || queries.some((q) => q.isLoading);
 
   const openDetail = (id: string) => {
     navigateHomeStack(navigation, 'ListingDetail', { id });
@@ -45,7 +41,7 @@ export function SavedScreen() {
     </View>
   );
 
-  if (!hydrated || (isLoading && listings.length === 0)) {
+  if (isLoading && listings.length === 0) {
     return (
       <View style={[styles.screen, { paddingTop: insets.top }]}>
         <View style={styles.content}>{header}</View>

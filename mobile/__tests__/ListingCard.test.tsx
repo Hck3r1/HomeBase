@@ -1,7 +1,17 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ListingCard } from '../src/components/ListingCard';
 import { Listing } from '../src/types/listing';
+import { api } from '../src/lib/api';
+
+jest.spyOn(api, 'get').mockResolvedValue({ data: [] } as any);
+
+function wrapper({ children }: { children: React.ReactNode }) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  client.setQueryData(['favorites'], []);
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+}
 
 const listing: Listing = {
   id: 'abc',
@@ -36,7 +46,7 @@ const listing: Listing = {
 
 describe('ListingCard', () => {
   it('shows title, price label, and location', () => {
-    const { getByText } = render(<ListingCard listing={listing} onPress={() => {}} />);
+    const { getByText } = render(<ListingCard listing={listing} onPress={() => {}} />, { wrapper });
     expect(getByText('Two-bed flat in Yaba')).toBeTruthy();
     expect(getByText('₦350,000/mo')).toBeTruthy();
     expect(getByText('Lagos, Lagos')).toBeTruthy();
@@ -44,7 +54,7 @@ describe('ListingCard', () => {
 
   it('calls onPress with the listing id', () => {
     const onPress = jest.fn();
-    const { getByText } = render(<ListingCard listing={listing} onPress={onPress} />);
+    const { getByText } = render(<ListingCard listing={listing} onPress={onPress} />, { wrapper });
     fireEvent.press(getByText('Two-bed flat in Yaba'));
     expect(onPress).toHaveBeenCalledWith('abc');
   });

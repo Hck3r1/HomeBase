@@ -6,17 +6,22 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SearchBar } from '../../components/SearchBar';
 import { SegmentedTypePills } from '../../components/SegmentedTypePills';
 import { ListingCard } from '../../components/ListingCard';
-import { HomeBaseMark } from '../../components/HomeBaseMark';
+import { AppBrandRow } from '../../components/AppBrandRow';
+import { HomeHeaderActions } from '../../components/HomeHeaderActions';
 import { theme } from '../../theme';
 import { useFilterStore } from '../../store/filterStore';
 import { useListings } from '../../hooks/listings';
 import { useListingFilters } from '../../hooks/useListingFilters';
 import { useAuthStore } from '../../store/authStore';
+import { useConversations } from '../../api/messaging';
+import { useNotificationUnreadCount } from '../../api/notifications';
+import { totalUnreadMessages } from '../../utils/conversationUnread';
 
 export function HomeFeedScreen() {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const userName = useAuthStore((s) => s.user?.name);
+  const currentUserId = useAuthStore((s) => s.user?.id ?? '');
   const firstName = userName?.split(' ')[0] ?? 'there';
 
   const type = useFilterStore((s) => s.type);
@@ -27,6 +32,10 @@ export function HomeFeedScreen() {
 
   const filters = useListingFilters();
   const { data, isLoading, refetch, isRefetching } = useListings(filters);
+  const { data: conversations } = useConversations();
+  const { data: unreadNotifications = 0 } = useNotificationUnreadCount();
+
+  const unreadMessages = conversations ? totalUnreadMessages(conversations, currentUserId) : 0;
 
   const submitSearch = () => {
     setQuery(text.trim() || undefined);
@@ -43,15 +52,18 @@ export function HomeFeedScreen() {
 
   const header = (
     <View style={styles.headerBlock}>
-      <View style={styles.brandRow}>
-        <View style={styles.logoWrap}>
-          <HomeBaseMark size={28} color={theme.colors.primary} />
-        </View>
-        <View style={styles.brandText}>
-          <Text style={styles.greeting}>Hello, {firstName}</Text>
-          <Text style={styles.subGreeting}>Find your next home in Nigeria</Text>
-        </View>
+      <View style={styles.topBar}>
+        <AppBrandRow />
+        <HomeHeaderActions
+          unreadMessages={unreadMessages}
+          unreadNotifications={unreadNotifications}
+          onMessagesPress={() => navigation.navigate('Conversations')}
+          onNotificationsPress={() => navigation.navigate('Notifications')}
+        />
       </View>
+
+      <Text style={styles.greeting}>Hello, {firstName}</Text>
+      <Text style={styles.subGreeting}>Find your next home in Nigeria</Text>
 
       <SearchBar
         value={text}
@@ -128,26 +140,25 @@ const styles = StyleSheet.create({
   loaderWrap: { flex: 1, paddingHorizontal: theme.spacing(3) },
   loader: { marginTop: theme.spacing(6) },
   listContent: { paddingHorizontal: theme.spacing(3) },
-  headerBlock: { paddingTop: theme.spacing(1), paddingBottom: theme.spacing(2) },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing(1.5), marginBottom: theme.spacing(2.5) },
-  logoWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: theme.radii.lg,
-    backgroundColor: theme.colors.primaryLight,
+  headerBlock: { paddingTop: theme.spacing(0.5), paddingBottom: theme.spacing(2) },
+  topBar: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing(2.5),
+    gap: theme.spacing(2),
   },
-  brandText: { flex: 1 },
   greeting: {
-    fontSize: theme.font.sizeXl,
-    fontWeight: theme.font.weightBold,
+    fontSize: theme.font.sizeLg,
+    fontWeight: theme.font.weightSemibold,
     color: theme.colors.ink,
+    letterSpacing: -0.3,
   },
   subGreeting: {
     fontSize: theme.font.sizeSm,
     color: theme.colors.muted,
-    marginTop: 2,
+    marginTop: 4,
+    marginBottom: theme.spacing(2.5),
   },
   search: { marginBottom: theme.spacing(2) },
   toolbar: {

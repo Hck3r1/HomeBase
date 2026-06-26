@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../theme';
 import { Listing, ListingType } from '../types/listing';
 import { PriceText } from './PriceText';
-import { SaveHeartButton } from './SaveHeartButton';
+import { FavoriteButton } from './FavoriteButton';
 
 interface Props {
   listing: Listing;
@@ -38,7 +38,7 @@ export function ListingCard({ listing, onPress }: Props) {
           )}
         </Pressable>
         <View style={styles.saveWrap}>
-          <SaveHeartButton listingId={listing.id} size={20} />
+          <FavoriteButton listingId={listing.id} size={20} />
         </View>
         <View style={styles.typeBadge} pointerEvents="none">
           <Text style={styles.typeBadgeText}>{TYPE_LABELS[listing.listingType]}</Text>

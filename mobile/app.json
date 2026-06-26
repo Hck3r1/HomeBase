@@ -1,21 +1,34 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "HomeBase",
+    "slug": "homebase",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
+    "scheme": "homebase",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#15201D"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.homebase.app",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        },
+        "NSLocalNetworkUsageDescription": "HomeBase connects to the development API on your local network.",
+        "NSLocationWhenInUseUsageDescription": "HomeBase uses your location to set your listing's map pin."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#EAF1EF"
       },
+      "package": "com.homebase.app",
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -24,7 +37,32 @@
     "plugins": [
       "@react-native-community/datetimepicker",
       "expo-secure-store",
-      "expo-status-bar"
+      "expo-status-bar",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#3B7A6F",
+          "sounds": [],
+          "enableBackgroundRemoteNotifications": false
+        }
+      ],
+      "./plugins/withOptionalIosPush.js",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "HomeBase uses your location to set your listing's map pin."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#15201D",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 120,
+          "resizeMode": "contain"
+        }
+      ]
     ]
   }
 }

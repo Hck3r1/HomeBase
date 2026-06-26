@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.line,
     borderRadius: theme.radii.md,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.input,
   },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing(1) },
   footer: {

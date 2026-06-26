@@ -1,7 +1,7 @@
 import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useListings, useListing } from '../src/hooks/listings';
+import { useListings, useListing, useNearbyListings } from '../src/hooks/listings';
 
 jest.mock('../src/api/listings', () => ({
   fetchListings: jest.fn().mockResolvedValue({
@@ -11,6 +11,9 @@ jest.mock('../src/api/listings', () => ({
     pageSize: 20,
   }),
   fetchListing: jest.fn().mockResolvedValue({ id: '1', title: 'Mocked detail' }),
+  fetchNearby: jest.fn().mockResolvedValue([
+    { id: '2', title: 'Nearby flat', listingType: 'rent', lat: 6.5, lng: 3.4, distanceMeters: 900 },
+  ]),
 }));
 
 function wrapper({ children }: { children: React.ReactNode }) {
@@ -29,5 +32,15 @@ describe('listing hooks', () => {
     const { result } = renderHook(() => useListing('1'), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.title).toBe('Mocked detail');
+  });
+
+  it('useNearbyListings fetches geo-ranked listings', async () => {
+    const { result } = renderHook(
+      () => useNearbyListings({ lat: 6.5244, lng: 3.3792, radius: 50_000, type: 'rent' }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.[0].title).toBe('Nearby flat');
+    expect(result.current.data?.[0].distanceMeters).toBe(900);
   });
 });
